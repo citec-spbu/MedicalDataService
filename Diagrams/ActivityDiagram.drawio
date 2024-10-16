@@ -1,6 +1,6 @@
 <mxfile host="Electron" agent="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/24.7.17 Chrome/128.0.6613.36 Electron/32.0.1 Safari/537.36" version="24.7.17">
   <diagram name="Page-1" id="d6oIZNa-YsMYUfMxQyWx">
-    <mxGraphModel dx="2049" dy="1191" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+    <mxGraphModel dx="1434" dy="834" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
@@ -374,8 +374,8 @@
             <mxPoint x="1580" y="380" as="targetPoint" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="O3XzgiAISaImiLr5el14-18" value="Деаномизация данных" style="rounded=1;whiteSpace=wrap;html=1;arcSize=40;fontColor=#000000;fillColor=#ffffc0;strokeColor=#ff0000;" parent="1" vertex="1">
-          <mxGeometry x="1520" y="291.25" width="120" height="37.5" as="geometry" />
+        <mxCell id="O3XzgiAISaImiLr5el14-18" value="Деаномизация данных (данные отображаются в браузере)" style="rounded=1;whiteSpace=wrap;html=1;arcSize=40;fontColor=#000000;fillColor=#ffffc0;strokeColor=#ff0000;" parent="1" vertex="1">
+          <mxGeometry x="1510" y="287.5" width="140" height="48.75" as="geometry" />
         </mxCell>
         <mxCell id="O3XzgiAISaImiLr5el14-26" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#FF0000;" parent="1" source="O3XzgiAISaImiLr5el14-21" target="O3XzgiAISaImiLr5el14-27" edge="1">
           <mxGeometry relative="1" as="geometry">
@@ -584,50 +584,61 @@
             <mxPoint x="964.71" y="605" as="targetPoint" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="fD1Ihro5c0wVTNQA4kxj-1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#FF0000;exitX=0.75;exitY=1;exitDx=0;exitDy=0;" edge="1" parent="1" source="O3XzgiAISaImiLr5el14-21" target="fD1Ihro5c0wVTNQA4kxj-2">
+        <mxCell id="fD1Ihro5c0wVTNQA4kxj-1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#FF0000;exitX=0.702;exitY=0.667;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="Nl1nljWizBG0Hd7FGc-C-59" target="FrHlqp_jE0AlUcna0mxF-1" edge="1">
           <mxGeometry relative="1" as="geometry">
-            <mxPoint x="1670" y="660" as="targetPoint" />
+            <mxPoint x="1670" y="720" as="targetPoint" />
             <mxPoint x="1650" y="460" as="sourcePoint" />
             <Array as="points">
-              <mxPoint x="1640" y="480" />
+              <mxPoint x="1700" y="480" />
               <mxPoint x="1670" y="480" />
             </Array>
           </mxGeometry>
         </mxCell>
-        <mxCell id="fD1Ihro5c0wVTNQA4kxj-4" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fillColor=#e51400;strokeColor=#FF0000;" edge="1" parent="1" source="fD1Ihro5c0wVTNQA4kxj-2" target="fD1Ihro5c0wVTNQA4kxj-5">
+        <mxCell id="fD1Ihro5c0wVTNQA4kxj-6" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#FF0000;exitX=0.5;exitY=1;exitDx=0;exitDy=0;" parent="1" source="FrHlqp_jE0AlUcna0mxF-3" target="fD1Ihro5c0wVTNQA4kxj-7" edge="1">
           <mxGeometry relative="1" as="geometry">
-            <mxPoint x="1769.37" y="940" as="targetPoint" />
+            <mxPoint x="1940" y="920" as="targetPoint" />
+            <mxPoint x="1940" y="860" as="sourcePoint" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="fD1Ihro5c0wVTNQA4kxj-2" value="Выгрузка персональных данных пациента в JSON" style="rounded=1;whiteSpace=wrap;html=1;arcSize=40;fontColor=#000000;fillColor=#ffffc0;strokeColor=#ff0000;" vertex="1" parent="1">
-          <mxGeometry x="1689.37" y="790" width="160" height="60" as="geometry" />
+        <mxCell id="fD1Ihro5c0wVTNQA4kxj-5" value="Выбор директории выгрузки, названия выгружаемого файла" style="rounded=1;whiteSpace=wrap;html=1;arcSize=40;fontColor=#000000;fillColor=#ffffc0;strokeColor=#ff0000;" parent="1" vertex="1">
+          <mxGeometry x="1574.6899999999998" y="770" width="190.63" height="65" as="geometry" />
         </mxCell>
-        <mxCell id="fD1Ihro5c0wVTNQA4kxj-6" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#FF0000;" edge="1" parent="1" source="fD1Ihro5c0wVTNQA4kxj-5" target="fD1Ihro5c0wVTNQA4kxj-7">
-          <mxGeometry relative="1" as="geometry">
-            <mxPoint x="1770" y="990" as="targetPoint" />
-          </mxGeometry>
-        </mxCell>
-        <mxCell id="fD1Ihro5c0wVTNQA4kxj-5" value="Выбор директории выгрузки, названия выгружаемого файла" style="rounded=1;whiteSpace=wrap;html=1;arcSize=40;fontColor=#000000;fillColor=#ffffc0;strokeColor=#ff0000;" vertex="1" parent="1">
-          <mxGeometry x="1674.6899999999998" y="885" width="190.63" height="65" as="geometry" />
-        </mxCell>
-        <mxCell id="fD1Ihro5c0wVTNQA4kxj-8" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#FF0000;" edge="1" parent="1" source="fD1Ihro5c0wVTNQA4kxj-7" target="fD1Ihro5c0wVTNQA4kxj-9">
+        <mxCell id="fD1Ihro5c0wVTNQA4kxj-8" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#FF0000;" parent="1" source="fD1Ihro5c0wVTNQA4kxj-7" target="fD1Ihro5c0wVTNQA4kxj-9" edge="1">
           <mxGeometry relative="1" as="geometry">
             <mxPoint x="1770" y="1060" as="targetPoint" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="fD1Ihro5c0wVTNQA4kxj-7" value="Отображение процесса выгрузки" style="rounded=1;whiteSpace=wrap;html=1;arcSize=40;fontColor=#000000;fillColor=#ffffc0;strokeColor=#ff0000;" vertex="1" parent="1">
-          <mxGeometry x="1710" y="970" width="120" height="40" as="geometry" />
+        <mxCell id="fD1Ihro5c0wVTNQA4kxj-7" value="Отображение процесса выгрузки" style="rounded=1;whiteSpace=wrap;html=1;arcSize=40;fontColor=#000000;fillColor=#ffffc0;strokeColor=#ff0000;" parent="1" vertex="1">
+          <mxGeometry x="1890" y="895" width="120" height="40" as="geometry" />
         </mxCell>
-        <mxCell id="fD1Ihro5c0wVTNQA4kxj-10" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;strokeColor=#FF0000;" edge="1" parent="1" source="fD1Ihro5c0wVTNQA4kxj-9" target="Nl1nljWizBG0Hd7FGc-C-57">
+        <mxCell id="fD1Ihro5c0wVTNQA4kxj-10" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;strokeColor=#FF0000;" parent="1" source="fD1Ihro5c0wVTNQA4kxj-9" target="Nl1nljWizBG0Hd7FGc-C-57" edge="1">
           <mxGeometry relative="1" as="geometry">
             <Array as="points">
-              <mxPoint x="2090" y="1060" />
+              <mxPoint x="2090" y="990" />
               <mxPoint x="2090" y="200" />
             </Array>
           </mxGeometry>
         </mxCell>
-        <mxCell id="fD1Ihro5c0wVTNQA4kxj-9" value="Сообщение об успешной выгрузке" style="rounded=1;whiteSpace=wrap;html=1;arcSize=40;fontColor=#000000;fillColor=#ffffc0;strokeColor=#ff0000;" vertex="1" parent="1">
-          <mxGeometry x="1710" y="1040" width="120" height="40" as="geometry" />
+        <mxCell id="fD1Ihro5c0wVTNQA4kxj-9" value="Сообщение об успешной выгрузке" style="rounded=1;whiteSpace=wrap;html=1;arcSize=40;fontColor=#000000;fillColor=#ffffc0;strokeColor=#ff0000;" parent="1" vertex="1">
+          <mxGeometry x="1890" y="970" width="120" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="FrHlqp_jE0AlUcna0mxF-1" value="Деаномизация данных в JSON" style="rounded=1;whiteSpace=wrap;html=1;arcSize=40;fontColor=#000000;fillColor=#ffffc0;strokeColor=#ff0000;" vertex="1" parent="1">
+          <mxGeometry x="1610" y="650" width="120" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="FrHlqp_jE0AlUcna0mxF-2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#FF0000;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="FrHlqp_jE0AlUcna0mxF-1" target="fD1Ihro5c0wVTNQA4kxj-5">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1690" y="740" as="targetPoint" />
+            <mxPoint x="1669.8" y="705" as="sourcePoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="FrHlqp_jE0AlUcna0mxF-3" value="Получение от пользователя токена, которому соответствует персональная информация об определенном пользователе" style="rounded=1;whiteSpace=wrap;html=1;arcSize=40;fontColor=#000000;fillColor=#ffffc0;strokeColor=#ff0000;" vertex="1" parent="1">
+          <mxGeometry x="1830" y="765" width="240" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="FrHlqp_jE0AlUcna0mxF-4" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#FF0000;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="fD1Ihro5c0wVTNQA4kxj-5" target="FrHlqp_jE0AlUcna0mxF-3">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1780" y="980" as="targetPoint" />
+            <mxPoint x="1890" y="890" as="sourcePoint" />
+          </mxGeometry>
         </mxCell>
       </root>
     </mxGraphModel>
