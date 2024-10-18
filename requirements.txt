@@ -1,5 +1,0 @@
-fastapi[standard]==0.115.0          # Main framework for building APIs
-SQLAlchemy==2.0.36                  # Python SQL toolkit and Object Relational Mapper
-asyncpg==0.29.0                     # Enables asynchronous programming capabilities with SQLAlchemy
-alembic==1.13.3                     # Database migration tool
-pydantic-settings==2.5.2            # Settings management using Pydantic
