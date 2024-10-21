@@ -8,4 +8,3 @@ System for storing, indexing and visualizing medical data in DICOM format
 4. [Sequence diagram](https://app.diagrams.net/#Hcitec-spbu%2FMedicalDataService%2Fmain%2FDiagrams%2FSequenceDiagram.drawio#%7B%22pageId%22%3A%22-7-vLeRaQvUi-DyRjATi%22%7D)
 
 ## Project setup
-Please run `git update-index --assume-unchanged .env` to make sure you don't push the changes of `.env` to the repository
