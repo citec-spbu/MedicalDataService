@@ -1,2 +1,9 @@
 Diagrams/.*
 .env
+alembic.ini
+
+# App folder
+app/dao/__pycache__
+app/__pycache__
+app/migration
+app/users/__pycache__
