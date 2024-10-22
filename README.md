@@ -21,7 +21,7 @@ System for storing, indexing and visualizing medical data in DICOM format
     ```
     Note that DB_PORT indicates the server version of PostgreSQl, for more info on linux you can run `pg_lsclusters`
 5.  Go to app folder, run `alembic init -t async migration`
-6. Move `alembic.ini` file from app folder to root folder of project (`mv alemvic.ini ..`)
+6. Move `alembic.ini` file from app folder to root folder of project (`mv alembic.ini ..`)
 7. In file `alemvic.ini` change row `script_location = migration` to `script_location = app/migration`
 8. Open file app/migration/env.py, delete all contents from the beginning of the file up to and including line `target_metadata = None` (row 23) and insert the following content instead
     ``` python
