@@ -7,7 +7,7 @@ System for storing, indexing and visualizing medical data in DICOM format
 3. [ER diagram](https://app.diagrams.net/#Hcitec-spbu%2FMedicalDataService%2Fmain%2FDiagrams%2FERDiagram.drawio#%7B%22pageId%22%3A%22ZZTZYGC4paBtnbswUOO2%22%7D)
 4. [Sequence diagram](https://app.diagrams.net/#Hcitec-spbu%2FMedicalDataService%2Fmain%2FDiagrams%2FSequenceDiagram.drawio#%7B%22pageId%22%3A%22-7-vLeRaQvUi-DyRjATi%22%7D)
 
-## Project setup
+## Backend setup
 1. Install python3.12 interpreter 
 2. Install dependencies with `pip install -r requirements.txt`
 3. Create a database `YOUR_DB_NAME` for the project, specify the password for this database for your user.
