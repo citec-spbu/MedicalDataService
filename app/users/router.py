@@ -1,6 +1,7 @@
 # Router describes internal logic for working on each user URL
 # request that starts with a certain prefix
-from fastapi import APIRouter, HTTPException, status
+from typing import Annotated
+from fastapi import APIRouter, HTTPException, status, Form
 from app.users.dao import UserDAO
 from app.users.schemas import SUser
 from app.users.auth import get_password_hash, authenticate_user
@@ -11,14 +12,15 @@ router = APIRouter(prefix="/user", tags=["Authorization and registration"])
 
 # TODO Maybe allow only certain characters in the password and nickname
 @router.post("/register/", summary="Register a new user")
-async def register_user(user_data: SUser) -> dict:
-    user = await UserDAO.find_one_or_none(nickname=user_data.nickname)
+async def register_user(nickname: Annotated[str, Form()], password:
+                        Annotated[str, Form()]) -> dict:
+    user = await UserDAO.find_one_or_none(nickname=nickname)
     if user is not None:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
-            detail=f"The user '{user_data.nickname}' already exists")
-    user_dict = user_data.dict()
-    user_dict["password"] = get_password_hash(user_data.password)
+            detail=f"The user '{nickname}' already exists")
+    user_dict = {"nickname": nickname, "password": password}
+    user_dict["password"] = get_password_hash(password)
     await UserDAO.add(**user_dict)
     return {"message": "You have registered successfully!"}
 
