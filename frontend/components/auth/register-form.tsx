@@ -44,8 +44,8 @@ export const RegisterForm = () => {
 
     register(values)
       .then((data) => {
-        setError(data.error);
-        setSuccess(data.success);
+        if (data.success) setSuccess(data.message);
+        else setError(data.message);
       })
       .finally(() => setIsPending(false));
   };
