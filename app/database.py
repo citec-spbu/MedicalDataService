@@ -19,7 +19,7 @@ str_not_null: TypeAlias = Annotated[str, mapped_column(nullable=False)]
 
 class Base(AsyncAttrs, DeclarativeBase):
     """
-    An abstract class from which all database table models are inherited.
+    An abstract class from which all database table Patients are inherited.
     """
 
     __abstract__ = True
