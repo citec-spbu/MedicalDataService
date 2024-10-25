@@ -8,4 +8,5 @@ app/__pycache__
 app/migration
 app/users/__pycache__
 .vscode
+.idea
 test.json
