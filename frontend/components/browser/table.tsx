@@ -59,7 +59,7 @@ export const DataTable = () => {
   return (
     <div className="w-full">
       <div className="flex items-center justify-center py-4">
-        {data === patientData && (
+        {columns === patientColumns && (
           <Input
             placeholder="Поиск по фамилии"
             value={(table.getColumn("name")?.getFilterValue() as string) ?? ""}
