@@ -1,11 +1,34 @@
 # Router describes internal logic for working on each user URL
 # request that starts with a certain prefix
 from typing import Annotated
-from fastapi import APIRouter, HTTPException, status, Form
+from fastapi import (
+    APIRouter,
+    HTTPException,
+    status,
+    Form,
+    Depends
+)
+from fastapi.security import HTTPBearer
 from app.users.dao import UserDAO
 from app.users.schemas import SUser
-from app.users.auth import get_password_hash, authenticate_user
+from app.users.models import User
+from app.users.auth import (
+    get_password_hash,
+    authenticate_user,
+)
+from app.users.jwt.token_info import TokenInfo
+from app.users.jwt.create import (
+    create_access_token,
+    create_refresh_token
+)
+from app.users.jwt.current_user import (
+    get_current_user_from_refresh,
+    get_current_user_from_access
+)
 
+# http_bearer = HTTPBearer(auto_error=False)
+# router = APIRouter(prefix="/user", tags=["Authorization and registration"],
+#                    dependencies=[Depends(http_bearer)])
 
 router = APIRouter(prefix="/user", tags=["Authorization and registration"])
 
@@ -25,21 +48,27 @@ async def register_user(user_data: Annotated[SUser, Form()]) -> dict:
     return {"message": "You have registered successfully!"}
 
 
-# TODO maybe add cookie and access token support
-@router.post("/login/", summary="Login to an existing account")
-async def auth_user(user_data: Annotated[SUser, Form()]):
-    check = await authenticate_user(nickname=user_data.nickname,
-                                    password=user_data.password)
-    if check is None:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,
-                            detail="Wrong nickname or password")
-    return {"message": "Logged in successfully"}
+@router.post("/login/",
+             response_model=TokenInfo,
+             summary="Login to an existing account")
+def authorize_user(user:
+                   Annotated[User,
+                             Depends(authenticate_user)]) -> TokenInfo:
+    access_token = create_access_token(user)
+    refresh_token = create_refresh_token(user)
+    return TokenInfo(access_token=access_token, refresh_token=refresh_token)
 
 
-# TODO delete request later
-@router.get("/exist/", summary="Check if user exists in DB")
-async def check_existence_user(nickname: str) -> dict:
-    user = await UserDAO.find_one_or_none(nickname=nickname)
-    if user is None:
-        return {"message": f"The user '{nickname}' does not exist"}
-    return {"message": f"The user '{nickname}' exists in the database"}
+@router.post("/me/jwt/refresh_access_token/",
+             response_model=TokenInfo,
+             response_model_exclude_none=True)
+def auth_refresh_jwt(user_data: SUser =
+                     Depends(get_current_user_from_refresh)):
+    access_token = create_access_token(user_data)
+    return TokenInfo(access_token=access_token)
+
+
+@router.get("/me/")
+def auth_user_check_self_info(user_data: SUser =
+                              Depends(get_current_user_from_access)):
+    return {"nickname": user_data.nickname}

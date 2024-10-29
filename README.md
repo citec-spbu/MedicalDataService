@@ -64,6 +64,8 @@ System for storing, indexing and visualizing medical data in DICOM format
 9. Go to root folder of project, run `alembic revision --autogenerate -m "Initial revision"`, 
 10. Run `alembic upgrade head`, a users table has now been created in your database. To roll back changes run `alembic downgrade -1`.
 For upgrade alternatively you can run `alembic upgrade VERSION_ID`, where VERSION_ID is id from generated file from folder app/migration/versions which contains a line like `Revision ID: VERSION_ID`
+11. Create RSA256 private certificate `openssl genrsa -out jwt-private.pem 2048`
+12. Create RSA256 public certificate based on private `openssl rsa -in jwt-private.pem -outform PEM -pubout -out jwt-public.pem`
 
 ## Usage
 Run `fastapi dev app/main.py` from root folder of project

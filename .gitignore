@@ -7,5 +7,7 @@ app/dao/__pycache__
 app/__pycache__
 app/migration
 app/users/__pycache__
+app/users/jwt/__pycache__
 .vscode
 test.json
+certs/*
