@@ -8,7 +8,6 @@ from fastapi import (
     Form,
     Depends
 )
-from fastapi.security import HTTPBearer
 from app.users.dao import UserDAO
 from app.users.schemas import SUser
 from app.users.models import User
@@ -25,10 +24,6 @@ from app.users.jwt.current_user import (
     get_current_user_from_refresh,
     get_current_user_from_access
 )
-
-# http_bearer = HTTPBearer(auto_error=False)
-# router = APIRouter(prefix="/user", tags=["Authorization and registration"],
-#                    dependencies=[Depends(http_bearer)])
 
 router = APIRouter(prefix="/user", tags=["Authorization and registration"])
 
@@ -70,5 +65,5 @@ def auth_refresh_jwt(user_data: SUser =
 
 @router.get("/me/")
 def auth_user_check_self_info(user_data: SUser =
-                              Depends(get_current_user_from_access)):
+                              Depends(get_current_user_from_access)) -> dict:
     return {"nickname": user_data.nickname}

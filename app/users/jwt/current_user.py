@@ -4,7 +4,10 @@ from fastapi import (
     status,
     Depends
 )
-from fastapi.security import OAuth2PasswordBearer
+from fastapi.security import (
+    HTTPBearer,
+    HTTPAuthorizationCredentials
+)
 from app.users.dao import UserDAO
 from app.users.schemas import SUser
 from app.users.jwt.conversion import decoded_jwt
@@ -14,11 +17,12 @@ from app.users.jwt.token_info import (
     REFRESH_TOKEN_TYPE
 )
 
+http_bearer = HTTPBearer()
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/user/login/get_token/")
 
-
-def get_current_token_payload(token: str = Depends(oauth2_scheme)) -> dict:
+def get_current_token_payload(credentials: HTTPAuthorizationCredentials
+                              = Depends(http_bearer)) -> dict:
+    token: str = credentials.credentials
     try:
         payload = decoded_jwt(token=token)
     except InvalidTokenError as err:
