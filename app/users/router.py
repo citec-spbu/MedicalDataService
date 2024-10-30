@@ -55,6 +55,7 @@ def authorize_user(user:
 
 
 @router.post("/me/jwt/refresh_access_token/",
+             summary="Refresh access token using refresh token",
              response_model=TokenInfo,
              response_model_exclude_none=True)
 def auth_refresh_jwt(user_data: SUser =
@@ -63,7 +64,7 @@ def auth_refresh_jwt(user_data: SUser =
     return TokenInfo(access_token=access_token)
 
 
-@router.get("/me/")
+@router.get("/me/", summary="Get current user data")
 def auth_user_check_self_info(user_data: SUser =
                               Depends(get_current_user_from_access)) -> dict:
     return {"nickname": user_data.nickname}
