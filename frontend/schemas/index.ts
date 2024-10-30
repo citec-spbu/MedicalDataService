@@ -4,11 +4,13 @@ export const RegisterSchema = z
   .object({
     login: z
       .string()
-      .min(3, { message: "Логин должен содержать не менее 3 символов" }),
+      .min(3, { message: "Логин должен содержать не менее 3 символов" })
+      .trim(),
     password: z
       .string()
-      .min(8, { message: "Пароль должен содержать не менее 8 символов" }),
-    confirmPassword: z.string()
+      .min(8, { message: "Пароль должен содержать не менее 8 символов" })
+      .trim(),
+    confirmPassword: z.string().trim()
   })
   .superRefine(({ confirmPassword, password }, ctx) => {
     if (confirmPassword !== password) {

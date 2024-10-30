@@ -2,7 +2,7 @@
 
 import * as z from "zod";
 
-import { useState } from "react";
+import { startTransition, useActionState, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
@@ -19,36 +19,27 @@ import { CardWrapper } from "@/components/auth/card-wrapper";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { FormError } from "@/components/form-error";
-import { FormSuccess } from "@/components/form-success";
 
 import { register } from "@/actions/register";
 
 export const RegisterForm = () => {
-  const [error, setError] = useState<string | undefined>("");
-  const [success, setSuccess] = useState<string | undefined>("");
-  const [isPending, setIsPending] = useState(false);
+  const [state, registerAction, isPending] = useActionState(register, {
+    message: "",
+    fields: {}
+  });
 
   const form = useForm<z.infer<typeof RegisterSchema>>({
     resolver: zodResolver(RegisterSchema),
     defaultValues: {
       login: "",
       password: "",
-      confirmPassword: ""
+      confirmPassword: "",
+      ...(state?.fields ?? {})
     }
   });
 
-  const onSubmit = (values: z.infer<typeof RegisterSchema>) => {
-    setError("");
-    setSuccess("");
-    setIsPending(true);
+  const formRef = useRef<HTMLFormElement>(null);
 
-    register(values)
-      .then((data) => {
-        if (data.success) setSuccess(data.message);
-        else setError(data.message);
-      })
-      .finally(() => setIsPending(false));
-  };
   return (
     <CardWrapper
       headerLabel="Регистрация аккаунта"
@@ -57,21 +48,27 @@ export const RegisterForm = () => {
       footerHrefs={["/auth/login"]}
     >
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="w-[300px]">
-          <div className="space-y-4">
+        <form
+          ref={formRef}
+          onSubmit={(e) => {
+            e.preventDefault();
+            form.handleSubmit(() => {
+              startTransition(() => {
+                registerAction(new FormData(formRef.current!));
+              });
+            })(e);
+          }}
+          action={registerAction}
+          className="w-[300px]"
+        >
+          <div className="space-y-4 text-base">
             <FormField
               control={form.control}
               name="login"
               render={({ field }) => (
                 <FormItem>
                   <FormControl>
-                    <Input
-                      {...field}
-                      disabled={isPending}
-                      placeholder="Логин"
-                      type="text"
-                      className="text-base"
-                    />
+                    <Input {...field} placeholder="Логин" type="text" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -83,13 +80,7 @@ export const RegisterForm = () => {
               render={({ field }) => (
                 <FormItem>
                   <FormControl>
-                    <Input
-                      {...field}
-                      disabled={isPending}
-                      placeholder="Пароль"
-                      type="password"
-                      className="text-base"
-                    />
+                    <Input {...field} placeholder="Пароль" type="password" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -103,18 +94,15 @@ export const RegisterForm = () => {
                   <FormControl>
                     <Input
                       {...field}
-                      disabled={isPending}
                       placeholder="Повторите пароль"
                       type="password"
-                      className="text-base"
                     />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             ></FormField>
-            <FormError message={error} />
-            <FormSuccess message={success} />
+            <FormError message={state?.message} />
             <Button
               disabled={isPending}
               variant="default"

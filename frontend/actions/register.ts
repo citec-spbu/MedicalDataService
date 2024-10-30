@@ -1,31 +1,43 @@
-"use client";
-
-import * as z from "zod";
+"use server";
 
 import { RegisterSchema } from "@/schemas";
-
 import axios, { AxiosError } from "axios";
+import { redirect } from "next/navigation";
 
 type ResponseData = {
   detail: string;
 };
 
-export const register = async (values: z.infer<typeof RegisterSchema>) => {
-  const result = { success: true, message: "Вы успешно зарегестрировались!" };
-  await axios
-    .postForm("http://localhost:8000/user/register/", {
-      nickname: values.login,
-      password: values.password
-    })
-    .catch(function (error: AxiosError) {
-      result.success = false;
-      if (error.response) {
-        result.message = (error.response.data as ResponseData).detail;
-      } else if (error.request) {
-        result.message = "Пожалуйста повторите попытку позже";
-      } else {
-        result.message = "Неизвестная ошибка";
-      }
+export type FormState = {
+  message: string;
+  fields?: Record<string, string>;
+};
+
+export const register = async (
+  prevState: FormState,
+  data: FormData
+): Promise<FormState> => {
+  const formData = Object.fromEntries(data);
+  const parsed = RegisterSchema.safeParse(formData);
+
+  try {
+    await axios.postForm("http://localhost:8000/user/register/", {
+      nickname: formData.login,
+      password: formData.password
     });
-  return result;
+  } catch (error) {
+    const response = { message: "", fields: parsed.data };
+    if (error instanceof AxiosError) {
+      if (error.response) {
+        response.message = (error.response.data as ResponseData).detail;
+      } else if (error.request) {
+        response.message = "Пожалуйста повторите попытку позже";
+      }
+    } else {
+      response.message = "Неизвестная ошибка";
+    }
+    return response;
+  }
+
+  redirect("/auth/login");
 };
