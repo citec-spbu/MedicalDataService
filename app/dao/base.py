@@ -1,5 +1,12 @@
 from sqlalchemy.future import select
 from app.database import async_session_maker
+from app.Deferred_operations.models import DeferredOperation
+from app.Dicom_file.models import DicomFile
+from app.Patients.models import Patient
+from app.Series.models import Series
+from app.Slices.models import Slice
+from app.Studies.models import Study
+from app.users.models import User
 
 
 class BaseDAO:
