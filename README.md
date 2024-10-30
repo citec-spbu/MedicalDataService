@@ -70,3 +70,9 @@ For upgrade alternatively you can run `alembic upgrade VERSION_ID`, where VERSIO
 
 ## Usage
 Run `fastapi dev app/main.py` from root folder of project
+
+To check tokens on the backend, log in with the appropriate token. Tokens can be obtained using the `/user/login/` endpoint
+
+`/user/me` waiting for an access token to enter
+
+`/user/me/jwt/refresh_access_token` waiting for a refresh token to enter
