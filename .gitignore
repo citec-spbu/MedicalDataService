@@ -17,3 +17,4 @@ app/users/__pycache__
 .idea
 test.json
 migrations/
+app/users/jwt/__pycache__
