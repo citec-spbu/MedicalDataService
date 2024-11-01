@@ -6,8 +6,15 @@ alembic.ini
 app/dao/__pycache__
 app/__pycache__
 app/migration
+app/deferred_operations/__pycache__
+app/dicom_file/__pycache__
+app/patients/__pycache__
+app/series/__pycache__
+app/slices/__pycache__
+app/studies/__pycache__
 app/users/__pycache__
-app/users/jwt/__pycache__
 .vscode
+.idea
 test.json
-certs/*
+migrations/
+app/users/jwt/__pycache__
