@@ -18,3 +18,4 @@ app/users/__pycache__
 test.json
 migrations/
 app/users/jwt/__pycache__
+certs/*
