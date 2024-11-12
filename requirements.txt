@@ -9,3 +9,5 @@ passlib[bcrypt]==1.7.4              # Simplified work with hashing
 PyJWT[crypto]==2.9.0                # JWT support
 pyOpenSSL==24.2.1                   # High-level wrapper around a subset of the OpenSSL library
 faststream[rabbit]==0.5.28          # RabbitMQ message broker
+aiofiles==24.1.0                    # Handling local disk files in asyncio applications.
+pydicom==3.0.1                      # For working with DICOM files
