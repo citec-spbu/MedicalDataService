@@ -14,7 +14,7 @@ class DeferredOperation(Base):
 
     id: Mapped[int_pk]
     requester_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
-    loading_state: Mapped[float] = mapped_column(Float)
+    loading_state: Mapped[float] = mapped_column(Float, server_default="0.0")
     request_type: Mapped[RequestType] = mapped_column(SQLEnum(RequestType))
 
     #relationship

@@ -8,7 +8,7 @@ class Slice(Base):
 
     id: Mapped[int_pk]
     series_id: Mapped[int] = mapped_column(ForeignKey("series.id"))
-    number_in_series: Mapped[int] = mapped_column(Integer)
+    number_in_series: Mapped[int] = mapped_column(Integer, nullable=False)
     check_sum: Mapped[str_not_null] = mapped_column(String(64))
     slice_name: Mapped[str_not_null] = mapped_column(String(100))
 

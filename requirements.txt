@@ -4,6 +4,10 @@ asyncpg==0.29.0                     # Enables asynchronous programming capabilit
 alembic==1.13.3                     # Database migration tool
 pydantic-settings==2.5.2            # Settings management using Pydantic
 greenlet==3.1.1                     # Alembic dependencies
-python-jose==3.3.0                  # To work with JWT (JSON Web Tokens)
 bcrypt==4.0.1                       # Password hashing using the bcrypt algorithm.
 passlib[bcrypt]==1.7.4              # Simplified work with hashing
+PyJWT[crypto]==2.9.0                # JWT support
+pyOpenSSL==24.2.1                   # High-level wrapper around a subset of the OpenSSL library
+faststream[rabbit]==0.5.28          # RabbitMQ message broker
+aiofiles==24.1.0                    # Handling local disk files in asyncio applications.
+pydicom==3.0.1                      # For working with DICOM files
