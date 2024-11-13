@@ -13,7 +13,7 @@ export const Footer = ({ labels, hrefs }: FooterProps) => {
     <Button
       variant="link"
       key={label}
-      className="text-sm w-full text-alternative"
+      className="text-sm w-full text-blue-500"
       size="sm"
       asChild
     >

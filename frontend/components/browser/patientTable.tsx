@@ -16,7 +16,7 @@ export const patientColumns: ColumnDef<Patient>[] = [
         <Button
           variant="ghost"
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          className="text-lg hover:text-alternative hover:bg-alternative/15 font-bold"
+          className="font-bold"
         >
           Имя пациента
           <CaretSortIcon className="ml-2 h-6 w-6" />
@@ -37,7 +37,7 @@ export const patientColumns: ColumnDef<Patient>[] = [
         <Button
           variant="ghost"
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          className="text-lg hover:text-alternative hover:bg-alternative/15 font-bold"
+          className="font-bold"
         >
           Дата рождения
           <CaretSortIcon className="ml-2 h-6 w-6" />

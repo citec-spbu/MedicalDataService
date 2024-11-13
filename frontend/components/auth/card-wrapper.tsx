@@ -23,7 +23,7 @@ export const CardWrapper = ({
   footerHrefs
 }: CardWrapperProps) => {
   return (
-    <Card className="w-[400px] shadow flex flex-col items-center justify-center">
+    <Card className="w-[400px] flex flex-col items-center justify-center">
       <CardHeader className="mt-8 mb-3">
         <Header label={headerLabel} />
       </CardHeader>

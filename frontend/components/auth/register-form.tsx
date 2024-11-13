@@ -107,7 +107,7 @@ export const RegisterForm = () => {
               disabled={isPending}
               variant="default"
               type="submit"
-              className="w-full text-white bg-ring"
+              className="w-full bg-ring"
             >
               Зарегестрироваться
             </Button>

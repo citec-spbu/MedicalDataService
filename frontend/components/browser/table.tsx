@@ -18,7 +18,7 @@ import {
   SortingState,
   useReactTable
 } from "@tanstack/react-table";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Input } from "@/components/ui/input";
 
 const mapper = {
@@ -37,7 +37,7 @@ export const DataTable = () => {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
 
-  const [tableState, setTableState] = useState(0);
+  const tableState = useRef(0);
   const [data, setData] = useState(patientData);
   const [columns, setColumns] = useState(patientColumns);
 
@@ -58,7 +58,7 @@ export const DataTable = () => {
 
   return (
     <div className="w-full">
-      <div className="flex items-center justify-center py-4">
+      <div className="flex items-center justify-start py-4">
         {columns === patientColumns && (
           <Input
             placeholder="Поиск по фамилии"
@@ -66,7 +66,7 @@ export const DataTable = () => {
             onChange={(event) =>
               table.getColumn("name")?.setFilterValue(event.target.value)
             }
-            className="max-w-sm text-lg"
+            className="max-w-sm"
           />
         )}
       </div>
@@ -95,15 +95,17 @@ export const DataTable = () => {
               table.getRowModel().rows.map((row) => (
                 <TableRow
                   key={row.id}
-                  onClick={(e) => {
-                    if (e.detail === 2) {
-                      const nextTableState = (tableState + 1) % 4;
-
-                      table.resetSorting();
-                      setData(mapper[nextTableState][0]);
-                      setColumns(mapper[nextTableState][1]);
-                      setTableState(nextTableState);
+                  onMouseDown={(e) => {
+                    if (e.detail > 1) {
+                      e.preventDefault();
                     }
+                  }}
+                  onDoubleClick={() => {
+                    tableState.current = (tableState.current + 1) % 4;
+
+                    table.resetSorting();
+                    setData(mapper[tableState.current][0]);
+                    setColumns(mapper[tableState.current][1]);
                   }}
                 >
                   {row.getVisibleCells().map((cell) => (

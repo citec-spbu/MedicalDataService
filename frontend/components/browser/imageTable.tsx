@@ -14,9 +14,9 @@ export const imageColumns: ColumnDef<Image>[] = [
         <Button
           variant="ghost"
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          className="text-lg hover:text-alternative hover:bg-alternative/15 font-bold"
+          className="font-bold"
         >
-          Дата рождения
+          Номер снимка
           <CaretSortIcon className="ml-2 h-6 w-6" />
         </Button>
       );
