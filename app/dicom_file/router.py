@@ -9,6 +9,12 @@ from fastapi import (
     status
 )
 from pydicom import dcmread
+from app.broker.router import (
+    session_patients,
+    router as broker_router,
+    SqlQuery,
+    TableType
+)
 from app.patients.dao import PatientDAO
 from app.users.jwt.current_user import get_current_user_with_role_from_access
 from app.users.models import UserRole
@@ -49,8 +55,14 @@ async def upload(
                     patient = await PatientDAO.find_one_or_none(
                         id=patient_id
                     )
-                    if patient is None:
-                        patient_dict = {"id": patient_id,
-                                        "patient_name": patient_name}
-                        await PatientDAO.add(**patient_dict)
+                    if patient is None and patient_id not in session_patients:
+                        session_patients.add(patient_id)
+                        await broker_router.broker.publish(
+                            message=SqlQuery(
+                                table_type=TableType.PATIENTS,
+                                value={"id": patient_id,
+                                       "patient_name": patient_name}
+                            ),
+                            queue="sql_query"
+                        )
     return {"message": f"Successfuly uploaded {file.filename}"}
