@@ -15,8 +15,10 @@ async_session_maker = async_sessionmaker(engine, expire_on_commit=False)
 
 # Setting up annotations
 int_pk: TypeAlias = Annotated[int, mapped_column(primary_key=True)]
+str_pk: TypeAlias = Annotated[str, mapped_column(primary_key=True)]
 str_uniq: TypeAlias = Annotated[str,
                                 mapped_column(unique=True, nullable=False)]
+str_nullable: TypeAlias = Annotated[str, mapped_column(nullable=True)]
 str_not_null: TypeAlias = Annotated[str, mapped_column(nullable=False)]
 
 

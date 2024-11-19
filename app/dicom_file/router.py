@@ -49,9 +49,19 @@ async def upload(
                     fp=BytesIO(zip_file.read(file_info.filename)),
                     force=True
                 )
+                # variable = ds.SeriesDescription
+                # variable = ds.StudyDescription
+                # print(variable)
+                # print(type(variable))
                 if "ImageType" in ds:
                     patient_id: int = int(ds.PatientID)
-                    patient_name: str = str(ds.PatientName)
+                    # patient_id: int = 98
+                    patient_name: str | None = None
+                    patient_sex: str | None = None
+                    if "PatientName" in ds and str(ds.PatientName) != "":
+                        patient_name = str(ds.PatientName)
+                    if "PatientSex" in ds and str(ds.PatientSex) != "":
+                        patient_sex = str(ds.PatientSex)
                     patient = await PatientDAO.find_one_or_none(
                         id=patient_id
                     )
@@ -61,7 +71,8 @@ async def upload(
                             message=SqlQuery(
                                 table_type=TableType.PATIENTS,
                                 value={"id": patient_id,
-                                       "patient_name": patient_name}
+                                       "name": patient_name,
+                                       "sex": patient_sex}
                             ),
                             queue="sql_query"
                         )
