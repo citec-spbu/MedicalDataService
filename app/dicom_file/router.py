@@ -10,7 +10,6 @@ from fastapi import (
 )
 from pydicom import dcmread
 from app.broker.router import (
-    session_patients,
     router as broker_router,
     SqlQuery,
     TableType
@@ -20,6 +19,7 @@ from app.users.jwt.current_user import get_current_user_with_role_from_access
 from app.users.models import UserRole
 from app.users.schemas import SUserWithRole
 
+session_patients: set = set()
 
 router = APIRouter(
     prefix="/dicom",

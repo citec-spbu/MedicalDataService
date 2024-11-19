@@ -5,7 +5,6 @@ from app.users.dao import UserDAO
 from enum import Enum
 
 router = RabbitRouter("amqp://guest:guest@localhost:5672/")
-session_patients: set = set()
 dao_types = [PatientDAO, UserDAO]
 
 
