@@ -46,9 +46,8 @@ async def register_user(user_data: Annotated[SUser, Form()]) -> dict:
 @router.post("/login/",
              response_model=TokenInfo,
              summary="Login to an existing account")
-def authorize_user(user:
-                   Annotated[User,
-                             Depends(authenticate_user)]) -> TokenInfo:
+def authorize_user(user: Annotated[User, Depends(authenticate_user)]
+                   ) -> TokenInfo:
     access_token = create_access_token(user)
     refresh_token = create_refresh_token(user)
     return TokenInfo(access_token=access_token, refresh_token=refresh_token)
