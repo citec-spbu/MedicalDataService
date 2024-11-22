@@ -39,5 +39,5 @@ export const login = async (
     return response;
   }
 
-  redirect("/auth/register");
+  redirect("/browser");
 };
