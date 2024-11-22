@@ -7,7 +7,10 @@ from app.users.jwt.current_user import get_current_user_from_access
 from app.users.models import User, UserRole
 from app.users.dao import UserDAO
 from app.users.schemas import SUser, SUserWithRole
-from app.broker import broker
+# from app.broker import broker
+
+from app.broker import router as broker_router
+from app.broker import IndexQuery
 
 import hashlib
 import io
@@ -102,7 +105,8 @@ async def upload_dicom_archive(
                 if not await is_dicom_file(file_content):
                     raise HTTPException(
                         status_code=400,
-                        detail=f"File {file_info.filename} is not a valid DICOM file"
+                        detail=f"File {
+                            file_info.filename} is not a valid DICOM file"
                     )
                 dicom_files.append((file_info.filename, file_content))
 
@@ -145,12 +149,12 @@ async def upload_dicom_archive(
 
         # отправка в очередь RabbitMQ
         try:
-            await broker.publish(
-                {
-                    "user_id": user_id,
-                    "bucket_name": MINIO_BUCKET,
-                    "minio_path": minio_path
-                },
+            await broker_router.broker.publish(
+                message=IndexQuery(
+                    user_id=user_id,
+                    bucket_name=MINIO_BUCKET,
+                    minio_path=minio_path
+                ),
                 queue="dicom_processing"
             )
         except Exception as e:
