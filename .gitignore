@@ -12,6 +12,7 @@ app/patients/__pycache__
 app/series/__pycache__
 app/slices/__pycache__
 app/studies/__pycache__
+app/upload/__pycache__
 app/users/jwt/__pycache__
 app/users/__pycache__
 app/broker/__pycache__
