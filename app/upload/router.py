@@ -57,13 +57,12 @@ async def upload_dicom_archive(
         user_data: SUserWithRole = Depends(get_current_user_from_access)
 ):
     # проверка роли
-    '''
     if user_data.role == UserRole.TECHNICAL:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Insufficient access rights"
         )
-'''
+
     try:
         user_id = await get_user_id_by_nickname(user_data.nickname)
 
