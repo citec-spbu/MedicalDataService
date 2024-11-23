@@ -5,8 +5,8 @@ from app.database import Base, int_pk
 from enum import Enum
 
 class RequestType(Enum):
-    PROCESSING = 0
-    ANALYSIS = 1
+    UPLOADING = 0
+    INDEXING = 1
     EXPORT = 2
 
 class DeferredOperation(Base):

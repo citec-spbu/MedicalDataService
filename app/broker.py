@@ -1,9 +1,3 @@
-# from faststream.rabbit import RabbitBroker
-# from app.config import rabbitmq_settings
-#
-# broker = RabbitBroker(rabbitmq_settings.url)
-
-
 from faststream.rabbit.fastapi import RabbitRouter, Logger
 from pydantic import BaseModel
 from app.config import rabbitmq_settings
