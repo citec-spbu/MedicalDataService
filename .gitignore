@@ -6,6 +6,7 @@ alembic.ini
 app/dao/__pycache__
 app/__pycache__
 app/migration
+app/broker/__pycache__
 app/deferred_operations/__pycache__
 app/dicom_file/__pycache__
 app/patients/__pycache__
