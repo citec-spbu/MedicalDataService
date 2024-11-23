@@ -7,14 +7,15 @@ from app.users.jwt.current_user import get_current_user_from_access
 from app.users.models import User, UserRole
 from app.users.dao import UserDAO
 from app.users.schemas import SUser, SUserWithRole
-from app.broker import broker
-
+from app.broker import router as broker_router
+from app.broker import IndexQuery
+from app.deferred_operations.models import DeferredOperation, RequestType
 import hashlib
 import io
 import zipfile
 import pydicom
 from datetime import datetime
-from sqlalchemy import select
+from sqlalchemy import select, update
 from app.database import async_session_maker
 
 router = APIRouter(prefix="/upload", tags=["Upload"])
@@ -40,38 +41,38 @@ async def check_duplicate_hash(file_hash: str) -> bool:
         result = await session.execute(query)
         return result.scalar_one_or_none() is not None
 
-
-async def get_user_id_by_nickname(nickname: str) -> int:
-    user = await UserDAO.find_one_or_none(nickname=nickname)
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="User not found"
-        )
-    return user.id
-
-
 @router.post("/")
 async def upload_dicom_archive(
         file: UploadFile,
         user_data: SUserWithRole = Depends(get_current_user_from_access)
 ):
     # проверка роли
-    '''
     if user_data.role == UserRole.TECHNICAL:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Insufficient access rights"
         )
-'''
+
     try:
-        user_id = await get_user_id_by_nickname(user_data.nickname)
+        user_id = await UserDAO.get_user_id_by_nickname(user_data.nickname)
 
         if not file.filename.endswith('.zip'):
             raise HTTPException(
-                status_code=400,
+                status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Only ZIP archives are allowed"
             )
+
+        # запись об операции загрузки
+        async with async_session_maker() as session:
+            deferred_operation = DeferredOperation(
+                requester_id=user_id,
+                loading_state=0.0,
+                request_type=RequestType.UPLOADING
+            )
+            session.add(deferred_operation)
+            await session.commit()
+            operation_id = deferred_operation.id
+
 
         # читаем файл в озу
         zip_content = await file.read()
@@ -113,9 +114,17 @@ async def upload_dicom_archive(
                     detail="No DICOM files found in the archive"
                 )
 
-        zip_buffer.seek(0)
+        # статус загрузки после валидации (50%)
+        async with async_session_maker() as session:
+            await session.execute(
+                update(DeferredOperation)
+                .where(DeferredOperation.id == operation_id)
+                .values(loading_state=0.5)
+            )
+            await session.commit()
 
         # загрузка в MinIO
+        zip_buffer.seek(0)
         timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
         minio_path = f"archives/{user_id}/{timestamp}_{file.filename}"
 
@@ -133,6 +142,15 @@ async def upload_dicom_archive(
                 detail=f"Failed to upload to MinIO: {str(e)}"
             )
 
+        # статус после загрузки в MinIO (75%)
+        async with async_session_maker() as session:
+            await session.execute(
+                update(DeferredOperation)
+                .where(DeferredOperation.id == operation_id)
+                .values(loading_state=0.75)
+            )
+            await session.commit()
+
         # сохранение информации в бд
         async with async_session_maker() as session:
             dicom_file = DicomFile(
@@ -142,18 +160,36 @@ async def upload_dicom_archive(
                 file_hash=zip_hash
             )
             session.add(dicom_file)
+
+            # статус после сохранения в БД (90%)
+            await session.execute(
+                update(DeferredOperation)
+                .where(DeferredOperation.id == operation_id)
+                .values(loading_state=0.9)
+            )
+
             await session.commit()
 
         # отправка в очередь RabbitMQ
         try:
-            await broker.publish(
-                {
-                    "user_id": user_id,
-                    "bucket_name": MINIO_BUCKET,
-                    "minio_path": minio_path
-                },
+            await broker_router.broker.publish(
+                message=IndexQuery(
+                    user_id=user_id,
+                    bucket_name=MINIO_BUCKET,
+                    minio_path=minio_path
+                ),
                 queue="dicom_processing"
             )
+
+            # статус после отправки в RabbitMQ (100%)
+            async with async_session_maker() as session:
+                await session.execute(
+                    update(DeferredOperation)
+                    .where(DeferredOperation.id == operation_id)
+                    .values(loading_state=1.0)
+                )
+                await session.commit()
+
         except Exception as e:
             raise HTTPException(
                 status_code=500,
@@ -167,4 +203,13 @@ async def upload_dicom_archive(
     except HTTPException:
         raise
     except Exception as e:
+        if 'operation_id' in locals():
+            async with async_session_maker() as session:
+                await session.execute(
+                    update(DeferredOperation)
+                    .where(DeferredOperation.id == operation_id)
+                    .values(loading_state=-1.0)
+                )
+                await session.commit()
+
         raise HTTPException(status_code=500, detail=str(e))
