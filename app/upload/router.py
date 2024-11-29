@@ -5,11 +5,11 @@ from app.dicom_file.models import DicomFile
 from app.config import get_minio_client, rabbitmq_settings, minio_settings
 from app.users.jwt.current_user import get_current_user_from_access
 from app.users.models import User, UserRole
+from app.deferred_operations.models import DeferredOperation, RequestType
 from app.users.dao import UserDAO
 from app.users.schemas import SUser, SUserWithRole
-from app.broker import router as broker_router
 from app.broker import IndexQuery
-from app.deferred_operations.models import DeferredOperation, RequestType
+from app.dicom_processing.processor import router as processor_router
 import hashlib
 import io
 import zipfile
@@ -172,7 +172,7 @@ async def upload_dicom_archive(
 
         # отправка в очередь RabbitMQ
         try:
-            await broker_router.broker.publish(
+            await processor_router.broker.publish(
                 message=IndexQuery(
                     user_id=user_id,
                     bucket_name=MINIO_BUCKET,

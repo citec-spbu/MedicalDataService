@@ -20,7 +20,7 @@ class DicomFile(Base):
 
     #relationships
     uploader: Mapped["User"] = relationship(back_populates="uploaded_files")
-    series: Mapped[List["Series"]] = relationship(back_populates="dicom_file")
+    instances: Mapped[List["Instance"]] = relationship(back_populates="dicom_file")
 
     __table_args__ = (
         UniqueConstraint('file_hash', name='uq_file_hash'),
