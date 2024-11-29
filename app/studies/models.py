@@ -1,26 +1,28 @@
-from sqlalchemy.orm import Mapped, mapped_column, relationship, validates
-from sqlalchemy.types import String
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy.types import Integer, String, Date, Time, ARRAY
 from sqlalchemy import ForeignKey
-from typing import List
-from app.database import Base, int_pk, str_not_null
+from typing import List, Optional
+from app.database import Base, str_uniq, int_pk
 
 class Study(Base):
     __tablename__ = "studies"
 
     id: Mapped[int_pk]
-    patient_id: Mapped[int] = mapped_column(ForeignKey("patients.id"))
-    study_name: Mapped[str_not_null] = mapped_column(String(100))
+    instance_uid: Mapped[str_uniq] = mapped_column(String(64))
+    patient_id: Mapped[int] = mapped_column(ForeignKey("patients.id"), nullable=False)
+    description: Mapped[Optional[str]] = mapped_column(String(64))
+    accession_number: Mapped[Optional[str]] = mapped_column(String(16))
+    date: Mapped[Optional[Date]] = mapped_column(Date)
+    time: Mapped[Optional[Time]] = mapped_column(Time)
+    modalities: Mapped[List[Optional[str]]] = mapped_column(ARRAY(String(16)), server_default="{}")
+    series_count: Mapped[int] = mapped_column(Integer, server_default='0')
+    instances_count: Mapped[int] = mapped_column(Integer, server_default='0')
+
 
     #relationship
     patient: Mapped["Patient"] = relationship(back_populates="studies")
     series: Mapped[List["Series"]] = relationship(back_populates="study")
 
-    @validates("study_name")
-    def validate_study_name(self, key, study_name):
-        if not 3 <= len(study_name) <= 100:
-            raise ValueError("Study name must be between 3 and 100 characters long.")
-        return study_name
-
-
     def __str__(self):
         return f"Study(id={self.id}, name={self.study_name})"
+    

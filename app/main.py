@@ -3,8 +3,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.users.router import router as users_router
 from app.upload.router import router as upload_router
 from app.broker import router as broker_router
+from app.dicom_metadata.router import router as metadata_router
 
-app = FastAPI()
+app = FastAPI(debug=True)
 
 app.add_middleware(
     CORSMiddleware,
@@ -23,3 +24,4 @@ def home_page():
 app.include_router(users_router)
 app.include_router(upload_router)
 app.include_router(broker_router)
+app.include_router(metadata_router)

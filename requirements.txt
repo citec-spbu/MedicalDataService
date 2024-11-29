@@ -11,3 +11,4 @@ pyOpenSSL==24.2.1                   # High-level wrapper around a subset of the 
 faststream[rabbit]==0.5.28          # RabbitMQ message broker
 aiofiles==24.1.0                    # Handling local disk files in asyncio applications.
 pydicom==3.0.1                      # For working with DICOM files
+alembic_utils==0.8.5

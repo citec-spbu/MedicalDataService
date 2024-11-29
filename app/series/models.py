@@ -1,38 +1,72 @@
 from sqlalchemy.orm import Mapped, mapped_column, relationship, validates
-from sqlalchemy.types import String, Integer, DateTime, Date, Time, ARRAY
+from sqlalchemy.types import Integer, String, Date, Time
 from sqlalchemy import ForeignKey
-from datetime import datetime
-from typing import List
-from app.database import Base, int_pk, str_not_null
-from sqlalchemy.sql import text
+from typing import List, Optional
+from app.database import Base, int_pk, str_uniq
+from alembic_utils.pg_function import PGFunction
+from alembic_utils.pg_trigger import PGTrigger
+
 class Series(Base):
     __tablename__ = "series"
 
     id: Mapped[int_pk]
+    instance_uid: Mapped[str_uniq] = mapped_column(String(64))
     study_id: Mapped[int] = mapped_column(ForeignKey("studies.id"))
-    dicom_file_id: Mapped[int] = mapped_column(ForeignKey("dicom_files.id"))
-    creation_date: Mapped[datetime] = mapped_column(Date, nullable=False, server_default=text("(CURRENT_DATE)"))
-    creation_time: Mapped[datetime] = mapped_column(Time, nullable=False, server_default=text("(CURRENT_TIME)"))
-    scale: Mapped[int] = mapped_column(ARRAY(Integer, dimensions=1))
-    series_name: Mapped[str_not_null] = mapped_column(String(100))
+    description: Mapped[Optional[str]] = mapped_column(String(64))
+    modality: Mapped[Optional[str]] = mapped_column(String(16))
+    date: Mapped[Optional[Date]] = mapped_column(Date)
+    time: Mapped[Optional[Time]] = mapped_column(Time)
+    character_set: Mapped[Optional[str]] = mapped_column(String(16))
+    manufacturer: Mapped[Optional[str]] = mapped_column(String(64))
+    physician_name: Mapped[Optional[str]] = mapped_column(String(64))
+    manufacturer_model_name: Mapped[Optional[str]] = mapped_column(String(64))
+    instances_count: Mapped[int] = mapped_column(Integer, server_default='0')
+
 
     #relationship
     study: Mapped["Study"] = relationship(back_populates="series")
-    dicom_file: Mapped["DicomFile"] = relationship(back_populates="series")
-    slices: Mapped[List["Slice"]] = relationship(back_populates="series")
-
-    @validates("series_name")
-    def validate_series_name(self, key, series_name):
-        if not 3 <= len(series_name) <= 100:
-            raise ValueError("Series name must be between 3 and 100 characters long.")
-        return series_name
-
-    @validates("scale")
-    def validate_scale(self, key, scale):
-        if not 1 <= scale <= 100:
-            raise ValueError("Scale must be between 1 and 100.")
-        return scale
+    instances: Mapped[List["Instance"]] = relationship(back_populates="series")
 
 
     def __str__(self):
         return f"Series(id={self.id}, name={self.series_name})"
+
+
+update_study_function = PGFunction(
+    schema="public",
+    signature="update_study()",
+    definition="""
+RETURNS TRIGGER AS $$
+BEGIN
+	UPDATE studies
+    SET
+	series_count = (
+		SELECT count(*) FROM series
+		WHERE studies.id = series.study_id), 
+	instances_count = (
+		SELECT sum(series.instances_count) FROM series
+		WHERE studies.id = series.study_id),
+	modalities = (
+		SELECT ARRAY(
+            SELECT distinct(series.modality) FROM series
+		    WHERE studies.id = series.study_id and series.modality IS NOT NULL)
+		)
+    WHERE id = NEW.study_id;
+    RETURN NULL;
+END;
+$$ LANGUAGE plpgsql;
+"""
+)
+
+
+trigger_update_study_function = PGTrigger(
+    schema="public",
+    signature="trigger_update_study",
+    is_constraint=False,
+    on_entity="series",
+    definition="""
+AFTER INSERT OR UPDATE OR DELETE ON series
+FOR EACH ROW
+EXECUTE FUNCTION update_study();
+""")
+
