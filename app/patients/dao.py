@@ -11,4 +11,4 @@ class PatientDAO(BaseDAO):
 
     @classmethod
     async def get_all_patients(cls):
-        return await cls.find_all() 
+        return await cls.find_all()

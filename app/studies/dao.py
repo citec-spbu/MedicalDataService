@@ -6,6 +6,10 @@ class StudyDAO(BaseDAO):
     model = Study
 
     @classmethod
+    async def get_studies(cls):
+        return await cls.find_all()
+
+    @classmethod
     async def get_study(cls, instance_uid: str):
         return await cls.find_one_or_none(instance_uid=instance_uid)
 

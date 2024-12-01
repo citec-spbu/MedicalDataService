@@ -2,8 +2,8 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.users.router import router as users_router
 from app.upload.router import router as upload_router
-from app.instances.router import router as instances_router
 from app.dicom_processing.processor import router as processor_router
+from app.metadata_provider.router import router as metadata_router
 import logging
 
 # логгер
@@ -37,4 +37,4 @@ def home_page():
 app.include_router(users_router)
 app.include_router(upload_router)
 app.include_router(processor_router)
-app.include_router(instances_router)
+app.include_router(metadata_router)

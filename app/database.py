@@ -3,6 +3,7 @@ from sqlalchemy.orm import DeclarativeBase, declared_attr, mapped_column
 from app.config import get_db_url
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, \
     AsyncAttrs
+from pydicom.datadict import dictionary_VR
 
 DATABASE_URL: str = get_db_url()
 
@@ -17,6 +18,15 @@ str_uniq: TypeAlias = Annotated[str,
 str_not_null: TypeAlias = Annotated[str, mapped_column(nullable=False)]
 
 
+def convert_to_json(tag, value):
+    body = {"vr": dictionary_VR(tag)}
+    if value != None:
+        body |= {"Value": [value]}
+        
+    return (
+        tag, body
+    )
+
 class Base(AsyncAttrs, DeclarativeBase):
     """
     An abstract class from which all database table Patients are inherited.
@@ -27,3 +37,4 @@ class Base(AsyncAttrs, DeclarativeBase):
     @declared_attr.directive
     def __tablename__(cls) -> str:
         return f"{cls.__name__.lower()}s"
+    

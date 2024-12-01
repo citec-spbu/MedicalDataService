@@ -1,24 +1,13 @@
 Diagrams/.*
 .env
 alembic.ini
+**/__pycache__
 
 # App folder
-app/dao/__pycache__
-app/__pycache__
 app/migration
-app/broker/__pycache__
-app/deferred_operations/__pycache__
-app/dicom_file/__pycache__
-app/patients/__pycache__
-app/series/__pycache__
-app/slices/__pycache__
-app/studies/__pycache__
-app/upload/__pycache__
-app/users/__pycache__
 frontend/package-lock.json
 .vscode
 .idea
 test.json
 migrations/
-app/users/jwt/__pycache__
 certs/*

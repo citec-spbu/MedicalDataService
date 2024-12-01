@@ -1,10 +1,11 @@
-from sqlalchemy.orm import Mapped, mapped_column, relationship, validates
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.types import Integer, String, Date, Time
 from sqlalchemy import ForeignKey
 from typing import List, Optional
-from app.database import Base, int_pk, str_uniq
+from app.database import Base, int_pk, str_uniq, convert_to_json
 from alembic_utils.pg_function import PGFunction
 from alembic_utils.pg_trigger import PGTrigger
+from datetime import datetime
 
 class Series(Base):
     __tablename__ = "series"
@@ -14,8 +15,8 @@ class Series(Base):
     study_id: Mapped[int] = mapped_column(ForeignKey("studies.id"))
     description: Mapped[Optional[str]] = mapped_column(String(64))
     modality: Mapped[Optional[str]] = mapped_column(String(16))
-    date: Mapped[Optional[Date]] = mapped_column(Date)
-    time: Mapped[Optional[Time]] = mapped_column(Time)
+    date: Mapped[Optional[datetime]] = mapped_column(Date)
+    time: Mapped[Optional[datetime]] = mapped_column(Time)
     character_set: Mapped[Optional[str]] = mapped_column(String(16))
     manufacturer: Mapped[Optional[str]] = mapped_column(String(64))
     physician_name: Mapped[Optional[str]] = mapped_column(String(64))
@@ -30,6 +31,21 @@ class Series(Base):
 
     def __str__(self):
         return f"Series(id={self.id}, description={self.description})"
+    
+    def to_json(self):
+        return dict((
+            convert_to_json("00080005", self.character_set),
+            convert_to_json("00080021", self.date.strftime("%Y%m%d") if self.date != None else None),
+            convert_to_json("00080031", self.time.strftime("%H%M%S.%f") if self.time != None else None),
+            convert_to_json("00080060", self.modality),
+            convert_to_json("00080070", self.manufacturer),
+            convert_to_json("00080090", {"Alphabetic": self.physician_name} if self.physician_name != None else None),
+            convert_to_json("00081090", self.manufacturer_model_name),
+            convert_to_json("0008103E", self.description),
+            convert_to_json("0020000E", self.instance_uid),
+            convert_to_json("00200011", self.id),
+            convert_to_json("00201209", self.instances_count)
+            ))
 
 
 update_study_function = PGFunction(

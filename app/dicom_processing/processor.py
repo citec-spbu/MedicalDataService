@@ -1,5 +1,8 @@
 from faststream.rabbit.fastapi import RabbitRouter, Logger
 from pydantic import BaseModel
+import pydicom.sequence
+import pydicom.uid
+import pydicom.valuerep
 from app.config import rabbitmq_settings, minio_settings, get_minio_client
 import zipfile
 import pydicom
@@ -38,7 +41,7 @@ class DicomProcessor:
         return hashlib.sha256(data).hexdigest()
 
     @staticmethod
-    def store_pixel_data(instance_uid: str, pixel_data: bytes) -> str:
+    def store_pixel_data(instance_uid: str, pixel_data: bytes) -> str | None:
         """Сохраняет пиксельные данные в MinIO и возвращает путь"""
         path = f"pixel_data/{instance_uid}.raw"
         try:
@@ -58,14 +61,20 @@ class DicomProcessor:
         """Конвертирует значения DICOM в JSON-сериализуемый формат"""
         if isinstance(value, (bytes, bytearray)):
             return f"Binary data ({len(value)} bytes)"
-        elif hasattr(value, 'original_string'):  # Для PersonName
-            return str(value)
+        elif isinstance(value, pydicom.valuerep.PersonName):
+            return "Alphabetic: " + str(value)
+        elif isinstance(value, (
+                        pydicom.valuerep.DSfloat,
+                        pydicom.valuerep.IS,
+                        pydicom.sequence.Sequence,
+                        pydicom.uid.UID)):
+            return str(value);
         elif isinstance(value, MultiValue):
             return [DicomProcessor._convert_to_json_serializable(v) for v in value]
         elif hasattr(value, 'value'):  # Для других специальных типов DICOM
-            return str(value.value)
+            return value.value
         else:
-            return str(value)
+            return value
 
     @staticmethod
     async def process_dicom_file(ds: pydicom.dataset.FileDataset, dicom_file_id: int):
@@ -82,7 +91,7 @@ class DicomProcessor:
             "issuer": "medicalDataService"
         }
 
-        if not await PatientDAO.is_exist(**patient_data):
+        if not await PatientDAO.is_exists(**patient_data):
             patient = await PatientDAO.add(**patient_data)
         else:
             patient = await PatientDAO.find_one_or_none(**patient_data)
@@ -99,7 +108,7 @@ class DicomProcessor:
             if hasattr(ds, 'StudyTime') and ds.StudyTime else None
         }
 
-        if not await StudyDAO.is_exist(instance_uid=study_data["instance_uid"]):
+        if not await StudyDAO.is_exists(instance_uid=study_data["instance_uid"]):
             study = await StudyDAO.add(**study_data)
         else:
             study = await StudyDAO.find_one_or_none(instance_uid=study_data["instance_uid"])
@@ -120,7 +129,7 @@ class DicomProcessor:
             "manufacturer_model_name": ds.ManufacturerModelName if hasattr(ds, 'ManufacturerModelName') else None
         }
 
-        if not await SeriesDAO.is_exist(instance_uid=series_data["instance_uid"]):
+        if not await SeriesDAO.is_exists(instance_uid=series_data["instance_uid"]):
             series = await SeriesDAO.add(**series_data)
         else:
             series = await SeriesDAO.find_one_or_none(instance_uid=series_data["instance_uid"])
@@ -129,22 +138,27 @@ class DicomProcessor:
         pixel_data = None
         if hasattr(ds, 'PixelData'):
             try:
-                pixel_data = ds.PixelData
+                pixel_data = ds.PixelData[20:]
             except Exception as e:
                 logger.error(f"Error extracting pixel data: {str(e)}")
 
         # создаем метаданные в формате JSON
         json_metadata = {}
         for field in ds:
-            if field.tag.json_key != "7FE00010":
-                try:
+            try:
+                if (field.tag.json_key == "7FE00010"):
+                    json_metadata[field.tag.json_key] = {
+                        "vr": field.VR,
+                        "BulkDataURI": f"instances/{ds.SOPInstanceUID}/frames"
+                    }
+                else:
                     value = DicomProcessor._convert_to_json_serializable(field.value)
                     json_metadata[field.tag.json_key] = {
                         "vr": field.VR,
                         "Value": [value] if not isinstance(value, list) else value
                     }
-                except Exception as e:
-                    logger.error(f"Error processing metadata field {field.tag}: {str(e)}")
+            except Exception as e:
+                logger.error(f"Error processing metadata field {field.tag}: {str(e)}")
 
         # сохраняем пиксельные данные в MinIO
         pixel_data_path = None
@@ -198,6 +212,8 @@ async def process_archive(query: IndexQuery, logger: Logger):
                             logger.error(f"DicomFile not found for path: {query.minio_path}")
                             continue
 
+                        ds.compress(JPEGLSLossless)
+                        
                         # Обрабатываем файл
                         await DicomProcessor.process_dicom_file(ds, dicom_file.id)
                         logger.info(f"Successfully processed file: {file.filename}")

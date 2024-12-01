@@ -2,6 +2,7 @@ fastapi[standard]==0.115.0          # Main framework for building APIs
 SQLAlchemy==2.0.36                  # Python SQL toolkit and Object Relational Mapper
 asyncpg==0.29.0                     # Enables asynchronous programming capabilities with SQLAlchemy
 alembic==1.13.3                     # Database migration tool
+alembic_utils==0.8.5                # Additional tools for Alembic
 pydantic==2.9.2                     # Data validation and settings management using Pydantic
 pydantic-settings==2.5.2            # Settings management using Pydantic
 greenlet==3.1.1                     # Alembic dependencies
@@ -12,6 +13,7 @@ pyOpenSSL==24.2.1                   # High-level wrapper around a subset of the 
 faststream[rabbit]==0.5.28          # RabbitMQ message broker
 aiofiles==24.1.0                    # Handling local disk files in asyncio applications
 pydicom==3.0.1                      # For working with DICOM files
+pyjpegls==1.5.1                     # For encoding DICOM into JPEG-LS format
 aio-pika==9.5.0                     # Asynchronous support for RabbitMQ
 httpx==0.27.2                       # Asynchronous HTTP client for Python
 httpcore==1.0.7                     # The core transport layer for HTTPX
