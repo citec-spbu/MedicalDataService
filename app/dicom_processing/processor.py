@@ -58,23 +58,27 @@ class DicomProcessor:
 
     @staticmethod
     def _convert_to_json_serializable(value):
-        """Конвертирует значения DICOM в JSON-сериализуемый формат"""
-        if isinstance(value, (bytes, bytearray)):
-            return f"Binary data ({len(value)} bytes)"
-        elif isinstance(value, pydicom.valuerep.PersonName):
-            return "Alphabetic: " + str(value)
-        elif isinstance(value, (
-                        pydicom.valuerep.DSfloat,
-                        pydicom.valuerep.IS,
-                        pydicom.sequence.Sequence,
-                        pydicom.uid.UID)):
-            return str(value);
-        elif isinstance(value, MultiValue):
-            return [DicomProcessor._convert_to_json_serializable(v) for v in value]
-        elif hasattr(value, 'value'):  # Для других специальных типов DICOM
-            return value.value
-        else:
-            return value
+            """Конвертирует значения DICOM в JSON-сериализуемый формат"""
+            if isinstance(value, (bytes, bytearray)):
+                return [f"Binary data ({len(value)} bytes)"]
+            elif isinstance(value, pydicom.valuerep.PersonName):
+                return [{"Alphabetic": str(value)}]
+            elif isinstance(value, pydicom.sequence.Sequence):
+                return [{field.tag.json_key: {
+                    "vr": str(field.VR),
+                    "Value": DicomProcessor._convert_to_json_serializable(field.value)
+                } for field in dataset} for dataset in value]
+            elif isinstance(value, (
+                            pydicom.valuerep.DSfloat,
+                            pydicom.valuerep.IS,
+                            pydicom.uid.UID)):
+                return [str(value)]
+            elif isinstance(value, MultiValue):
+                return [DicomProcessor._convert_to_json_serializable(v)[0] for v in value]
+            elif hasattr(value, 'value'):  # Для других специальных типов DICOM
+                return [value.value]
+            else:
+                return [value]
 
     @staticmethod
     async def process_dicom_file(ds: pydicom.dataset.FileDataset, dicom_file_id: int):
@@ -95,6 +99,7 @@ class DicomProcessor:
             patient = await PatientDAO.add(**patient_data)
         else:
             patient = await PatientDAO.find_one_or_none(**patient_data)
+
 
         # обработка Study
         study_data = {
@@ -152,10 +157,9 @@ class DicomProcessor:
                         "BulkDataURI": f"instances/{ds.SOPInstanceUID}/frames"
                     }
                 else:
-                    value = DicomProcessor._convert_to_json_serializable(field.value)
                     json_metadata[field.tag.json_key] = {
-                        "vr": field.VR,
-                        "Value": [value] if not isinstance(value, list) else value
+                        "vr": str(field.VR),
+                        "Value": DicomProcessor._convert_to_json_serializable(field.value)
                     }
             except Exception as e:
                 logger.error(f"Error processing metadata field {field.tag}: {str(e)}")
@@ -184,6 +188,7 @@ class DicomProcessor:
 @router.subscriber("dicom_processing")
 async def process_archive(query: IndexQuery, logger: Logger):
     logger.info(f"Starting processing archive: {query.minio_path}")
+
 
     try:
         with tempfile.TemporaryDirectory() as temp_dir:
