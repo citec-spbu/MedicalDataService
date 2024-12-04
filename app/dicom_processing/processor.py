@@ -18,7 +18,7 @@ import asyncio
 import signal
 import logging
 
-#логгер
+# логгер
 logger = logging.getLogger(__name__)
 
 from app.patients.dao import PatientDAO
@@ -28,7 +28,7 @@ from app.instances.dao import InstanceDAO
 from app.dicom_file.dao import DicomFileDAO
 from app.broker import IndexQuery
 
-#создаем роутер
+# создаем роутер
 router = RabbitRouter(rabbitmq_settings.url)
 
 minio_client = get_minio_client()
@@ -58,137 +58,137 @@ class DicomProcessor:
 
     @staticmethod
     def _convert_to_json_serializable(value):
-            """Конвертирует значения DICOM в JSON-сериализуемый формат"""
-            if isinstance(value, (bytes, bytearray)):
-                return [f"Binary data ({len(value)} bytes)"]
-            elif isinstance(value, pydicom.valuerep.PersonName):
-                return [{"Alphabetic": str(value)}]
-            elif isinstance(value, pydicom.sequence.Sequence):
-                return [{field.tag.json_key: {
-                    "vr": str(field.VR),
-                    "Value": DicomProcessor._convert_to_json_serializable(field.value)
-                } for field in dataset} for dataset in value]
-            elif isinstance(value, (
-                            pydicom.valuerep.DSfloat,
-                            pydicom.valuerep.IS,
-                            pydicom.uid.UID)):
-                return [str(value)]
-            elif isinstance(value, MultiValue):
-                return [DicomProcessor._convert_to_json_serializable(v)[0] for v in value]
-            elif hasattr(value, 'value'):  # Для других специальных типов DICOM
-                return [value.value]
-            else:
-                return [value]
+        """Конвертирует значения DICOM в JSON-сериализуемый формат"""
+        if isinstance(value, (bytes, bytearray)):
+            return [f"Binary data ({len(value)} bytes)"]
+        elif isinstance(value, pydicom.valuerep.PersonName):
+            return [{"Alphabetic": str(value)}]
+        elif isinstance(value, pydicom.sequence.Sequence):
+            return [{field.tag.json_key: {
+                "vr": str(field.VR),
+                "Value": DicomProcessor._convert_to_json_serializable(field.value)
+            } for field in dataset} for dataset in value]
+        elif isinstance(value, (
+                pydicom.valuerep.DSfloat,
+                pydicom.valuerep.IS,
+                pydicom.uid.UID)):
+            return [str(value)]
+        elif isinstance(value, MultiValue):
+            return [DicomProcessor._convert_to_json_serializable(v)[0] for v in value]
+        elif hasattr(value, 'value'):  # Для других специальных типов DICOM
+            return [value.value]
+        else:
+            return [value]
 
     @staticmethod
     async def process_dicom_file(ds: pydicom.dataset.FileDataset, dicom_file_id: int):
-        # проверяем, что это не DICOMDIR и есть необходимые теги
-        if not all(hasattr(ds, attr) for attr in ['StudyInstanceUID', 'SeriesInstanceUID', 'SOPInstanceUID']):
-            raise ValueError("Missing required DICOM attributes")
+        try:
+            # Обработка Patient
+            patient_data = {
+                "name": str(ds.PatientName) if hasattr(ds, 'PatientName') else None,
+                "sex": ds.PatientSex if hasattr(ds, 'PatientSex') else None,
+                "birth_date": datetime.strptime(ds.PatientBirthDate, '%Y%m%d').date()
+                if hasattr(ds, 'PatientBirthDate') and ds.PatientBirthDate else None,
+                "issuer": "medicalDataService"
+            }
 
-        # обработка Patient
-        patient_data = {
-            "name": str(ds.PatientName) if hasattr(ds, 'PatientName') else None,
-            "sex": ds.PatientSex if hasattr(ds, 'PatientSex') else None,
-            "birth_date": datetime.strptime(ds.PatientBirthDate, '%Y%m%d').date()
-            if hasattr(ds, 'PatientBirthDate') and ds.PatientBirthDate else None,
-            "issuer": "medicalDataService"
-        }
+            if not await PatientDAO.is_exist(**patient_data):
+                patient = await PatientDAO.add(**patient_data)
+            else:
+                patient = await PatientDAO.find_one_or_none(**patient_data)
 
-        if not await PatientDAO.is_exists(**patient_data):
-            patient = await PatientDAO.add(**patient_data)
-        else:
-            patient = await PatientDAO.find_one_or_none(**patient_data)
+            # Обработка Study
+            study_data = {
+                "instance_uid": ds.StudyInstanceUID,
+                "patient_id": patient.id,
+                "description": ds.StudyDescription if hasattr(ds, 'StudyDescription') else None,
+                "accession_number": ds.AccessionNumber if hasattr(ds, 'AccessionNumber') else None,
+                "date": datetime.strptime(ds.StudyDate, '%Y%m%d').date()
+                if hasattr(ds, 'StudyDate') and ds.StudyDate else None,
+                "time": datetime.strptime(ds.StudyTime.split('.')[0], '%H%M%S').time()
+                if hasattr(ds, 'StudyTime') and ds.StudyTime else None,
+                "modalities": [ds.Modality] if hasattr(ds, 'Modality') else []
+            }
 
+            if not await StudyDAO.is_exist(instance_uid=study_data["instance_uid"]):
+                study = await StudyDAO.add(**study_data)
+            else:
+                study = await StudyDAO.find_one_or_none(instance_uid=study_data["instance_uid"])
 
-        # обработка Study
-        study_data = {
-            "instance_uid": ds.StudyInstanceUID,
-            "patient_id": patient.id,
-            "description": ds.StudyDescription if hasattr(ds, 'StudyDescription') else None,
-            "accession_number": ds.AccessionNumber if hasattr(ds, 'AccessionNumber') else None,
-            "date": datetime.strptime(ds.StudyDate, '%Y%m%d').date()
-            if hasattr(ds, 'StudyDate') and ds.StudyDate else None,
-            "time": datetime.strptime(ds.StudyTime.split('.')[0], '%H%M%S').time()
-            if hasattr(ds, 'StudyTime') and ds.StudyTime else None
-        }
+            # Обработка Series
+            series_data = {
+                "instance_uid": ds.SeriesInstanceUID,
+                "study_id": study.id,
+                "description": ds.SeriesDescription if hasattr(ds, 'SeriesDescription') else None,
+                "modality": ds.Modality if hasattr(ds, 'Modality') else None,
+                "date": datetime.strptime(ds.SeriesDate, '%Y%m%d').date()
+                if hasattr(ds, 'SeriesDate') and ds.SeriesDate else None,
+                "time": datetime.strptime(ds.SeriesTime.split('.')[0], '%H%M%S').time()
+                if hasattr(ds, 'SeriesTime') and ds.SeriesTime else None,
+                "character_set": ds.SpecificCharacterSet if hasattr(ds, 'SpecificCharacterSet') else None,
+                "manufacturer": ds.Manufacturer if hasattr(ds, 'Manufacturer') else None,
+                "physician_name": str(ds.PerformingPhysicianName) if hasattr(ds, 'PerformingPhysicianName') else None,
+                "manufacturer_model_name": ds.ManufacturerModelName if hasattr(ds, 'ManufacturerModelName') else None
+            }
 
-        if not await StudyDAO.is_exists(instance_uid=study_data["instance_uid"]):
-            study = await StudyDAO.add(**study_data)
-        else:
-            study = await StudyDAO.find_one_or_none(instance_uid=study_data["instance_uid"])
+            if not await SeriesDAO.is_exist(instance_uid=series_data["instance_uid"]):
+                series = await SeriesDAO.add(**series_data)
+            else:
+                series = await SeriesDAO.find_one_or_none(instance_uid=series_data["instance_uid"])
 
-        # обработка Series
-        series_data = {
-            "instance_uid": ds.SeriesInstanceUID,
-            "study_id": study.id,
-            "description": ds.SeriesDescription if hasattr(ds, 'SeriesDescription') else None,
-            "modality": ds.Modality if hasattr(ds, 'Modality') else None,
-            "date": datetime.strptime(ds.SeriesDate, '%Y%m%d').date()
-            if hasattr(ds, 'SeriesDate') and ds.SeriesDate else None,
-            "time": datetime.strptime(ds.SeriesTime.split('.')[0], '%H%M%S').time()
-            if hasattr(ds, 'SeriesTime') and ds.SeriesTime else None,
-            "character_set": ds.SpecificCharacterSet if hasattr(ds, 'SpecificCharacterSet') else None,
-            "manufacturer": ds.Manufacturer if hasattr(ds, 'Manufacturer') else None,
-            "physician_name": str(ds.PerformingPhysicianName) if hasattr(ds, 'PerformingPhysicianName') else None,
-            "manufacturer_model_name": ds.ManufacturerModelName if hasattr(ds, 'ManufacturerModelName') else None
-        }
+            # извекаем пиксельные данные
+            pixel_data = None
+            if hasattr(ds, 'PixelData'):
+                try:
+                    pixel_data = ds.PixelData[20:]
+                except Exception as e:
+                    logger.error(f"Error extracting pixel data: {str(e)}")
 
-        if not await SeriesDAO.is_exists(instance_uid=series_data["instance_uid"]):
-            series = await SeriesDAO.add(**series_data)
-        else:
-            series = await SeriesDAO.find_one_or_none(instance_uid=series_data["instance_uid"])
+            # создаем метаданные в формате JSON
+            json_metadata = {}
+            for field in ds:
+                try:
+                    if (field.tag.json_key == "7FE00010"):
+                        json_metadata[field.tag.json_key] = {
+                            "vr": field.VR,
+                            "BulkDataURI": f"instances/{ds.SOPInstanceUID}/frames"
+                        }
+                    else:
+                        json_metadata[field.tag.json_key] = {
+                            "vr": str(field.VR),
+                            "Value": DicomProcessor._convert_to_json_serializable(field.value)
+                        }
+                except Exception as e:
+                    logger.error(f"Error processing metadata field {field.tag}: {str(e)}")
 
-        # извекаем пиксельные данные
-        pixel_data = None
-        if hasattr(ds, 'PixelData'):
-            try:
-                pixel_data = ds.PixelData[20:]
-            except Exception as e:
-                logger.error(f"Error extracting pixel data: {str(e)}")
+            # сохраняем пиксельные данные в MinIO
+            pixel_data_path = None
+            if pixel_data:
+                pixel_data_path = DicomProcessor.store_pixel_data(
+                    ds.SOPInstanceUID,
+                    pixel_data
+                )
 
-        # создаем метаданные в формате JSON
-        json_metadata = {}
-        for field in ds:
-            try:
-                if (field.tag.json_key == "7FE00010"):
-                    json_metadata[field.tag.json_key] = {
-                        "vr": field.VR,
-                        "BulkDataURI": f"instances/{ds.SOPInstanceUID}/frames"
-                    }
-                else:
-                    json_metadata[field.tag.json_key] = {
-                        "vr": str(field.VR),
-                        "Value": DicomProcessor._convert_to_json_serializable(field.value)
-                    }
-            except Exception as e:
-                logger.error(f"Error processing metadata field {field.tag}: {str(e)}")
+            # создаем запись в БД
+            instance_data = {
+                "sop_instance_uid": ds.SOPInstanceUID,
+                "series_id": series.id,
+                "dicom_file_id": dicom_file_id,
+                "check_sum": DicomProcessor.calculate_checksum(pixel_data) if pixel_data else None,
+                "metadata_": json_metadata,
+                "pixel_data_path": pixel_data_path
+            }
 
-        # сохраняем пиксельные данные в MinIO
-        pixel_data_path = None
-        if pixel_data:
-            pixel_data_path = DicomProcessor.store_pixel_data(
-                ds.SOPInstanceUID,
-                pixel_data
-            )
+            await InstanceDAO.add(**instance_data)
 
-        # создаем запись в БД
-        instance_data = {
-            "sop_instance_uid": ds.SOPInstanceUID,
-            "series_id": series.id,
-            "dicom_file_id": dicom_file_id,
-            "check_sum": DicomProcessor.calculate_checksum(pixel_data) if pixel_data else None,
-            "metadata_": json_metadata,
-            "pixel_data_path": pixel_data_path
-        }
-
-        await InstanceDAO.add(**instance_data)
+        except Exception as e:
+            logger.error(f"Error processing DICOM file: {str(e)}")
+            raise
 
 
 @router.subscriber("dicom_processing")
 async def process_archive(query: IndexQuery, logger: Logger):
     logger.info(f"Starting processing archive: {query.minio_path}")
-
 
     try:
         with tempfile.TemporaryDirectory() as temp_dir:
@@ -218,7 +218,7 @@ async def process_archive(query: IndexQuery, logger: Logger):
                             continue
 
                         ds.compress(JPEGLSLossless)
-                        
+
                         # Обрабатываем файл
                         await DicomProcessor.process_dicom_file(ds, dicom_file.id)
                         logger.info(f"Successfully processed file: {file.filename}")

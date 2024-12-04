@@ -6,6 +6,7 @@ from app.database import Base, int_pk, str_not_null, str_uniq
 from alembic_utils.pg_function import PGFunction
 from alembic_utils.pg_trigger import PGTrigger
 
+
 class Instance(Base):
     __tablename__ = "instances"
 
@@ -16,8 +17,8 @@ class Instance(Base):
     check_sum: Mapped[str_not_null] = mapped_column(String(64))
     metadata_: Mapped[dict] = mapped_column(JSONB)
     pixel_data_path: Mapped[str_not_null] = mapped_column(String(512))
-    
-    #relationship
+
+    # relationship
     series: Mapped["Series"] = relationship(back_populates="instances")
     dicom_file: Mapped["DicomFile"] = relationship(back_populates="instances")
 

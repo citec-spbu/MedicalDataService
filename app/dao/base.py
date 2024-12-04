@@ -49,7 +49,7 @@ class BaseDAO:
                 return new_instance
 
     @classmethod
-    async def is_exists(cls, **filter_by):
+    async def is_exist(cls, **filter_by):
         """
         Check if record exists
         """

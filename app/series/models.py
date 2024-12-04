@@ -7,6 +7,7 @@ from alembic_utils.pg_function import PGFunction
 from alembic_utils.pg_trigger import PGTrigger
 from datetime import datetime
 
+
 class Series(Base):
     __tablename__ = "series"
 
@@ -23,15 +24,13 @@ class Series(Base):
     manufacturer_model_name: Mapped[Optional[str]] = mapped_column(String(64))
     instances_count: Mapped[int] = mapped_column(Integer, server_default='0')
 
-
-    #relationship
+    # relationship
     study: Mapped["Study"] = relationship(back_populates="series")
     instances: Mapped[List["Instance"]] = relationship(back_populates="series")
 
-
     def __str__(self):
         return f"Series(id={self.id}, description={self.description})"
-    
+
     def to_json(self):
         return dict((
             convert_to_json("00080005", self.character_set),
@@ -45,7 +44,7 @@ class Series(Base):
             convert_to_json("0020000E", self.instance_uid),
             convert_to_json("00200011", self.id),
             convert_to_json("00201209", self.instances_count)
-            ))
+        ))
 
 
 update_study_function = PGFunction(
@@ -60,12 +59,12 @@ BEGIN
 		SELECT count(*) FROM series
 		WHERE studies.id = series.study_id), 
 	instances_count = (
-		SELECT sum(series.instances_count) FROM series
+		SELECT COALESCE(sum(series.instances_count), 0) FROM series
 		WHERE studies.id = series.study_id),
 	modalities = (
 		SELECT ARRAY(
-            SELECT distinct(series.modality) FROM series
-		    WHERE studies.id = series.study_id and series.modality IS NOT NULL)
+            SELECT DISTINCT series.modality FROM series
+		    WHERE studies.id = series.study_id AND series.modality IS NOT NULL)
 		)
     WHERE id = NEW.study_id;
     RETURN NULL;
@@ -74,12 +73,11 @@ $$ LANGUAGE plpgsql;
 """
 )
 
-
 trigger_update_study_function = PGTrigger(
     schema="public",
     signature="trigger_update_study",
     is_constraint=False,
-    on_entity="series",
+    on_entity="public.series",
     definition="""
 AFTER INSERT OR UPDATE OR DELETE ON series
 FOR EACH ROW
