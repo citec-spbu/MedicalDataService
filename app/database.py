@@ -1,10 +1,17 @@
-from typing import Annotated, TypeAlias
-from sqlalchemy.orm import DeclarativeBase, declared_attr, mapped_column
-from app.config import get_db_url
+from sqlalchemy.orm import (
+    DeclarativeBase,
+    declared_attr,
+    mapped_column
+)
 from sqlalchemy.ext.asyncio import (
     create_async_engine,
     async_sessionmaker,
     AsyncAttrs
+)
+from app.config import get_db_url
+from typing import (
+    Annotated,
+    TypeAlias
 )
 
 DATABASE_URL: str = get_db_url()

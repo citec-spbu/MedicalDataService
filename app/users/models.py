@@ -1,10 +1,19 @@
 # Model describes table structure
+from sqlalchemy.orm import (
+    Mapped,
+    validates,
+    mapped_column,
+    relationship
+)
+from sqlalchemy.types import String
+from app.database import (
+    Base,
+    int_pk,
+    str_uniq,
+    str_not_null
+)
 from enum import Enum
 from typing import List
-
-from sqlalchemy.orm import Mapped, validates, mapped_column, relationship
-from sqlalchemy.types import String
-from app.database import Base, int_pk, str_uniq, str_not_null
 
 
 class UserRole(Enum):
@@ -20,11 +29,13 @@ class User(Base):
     password: Mapped[str_not_null] = mapped_column(String(60))
     role: Mapped[UserRole] = mapped_column(server_default="TECHNICAL")
 
-
-    #relationship
-    uploaded_files: Mapped[List["DicomFile"]] = relationship(back_populates="uploader")
-    deferred_operations: Mapped[List["DeferredOperation"]] = relationship(back_populates="requester")
-
+    # relationship
+    uploaded_files: Mapped[List["DicomFile"]] = relationship(
+        back_populates="uploader"
+    )
+    deferred_operations: Mapped[List["DeferredOperation"]] = relationship(
+        back_populates="requester"
+    )
 
     @validates("nickname")
     def validate_nickname(self, key, nickname):

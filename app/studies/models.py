@@ -12,7 +12,7 @@ from app.database import (
 class Study(Base):
     __tablename__ = "studies"
 
-    id: Mapped[str_pk]
+    id: Mapped[str_pk] = mapped_column(String(100))
     patient_id: Mapped[int] = mapped_column(ForeignKey("patients.id"))
     study_name: Mapped[str_nullable] = mapped_column(String(100))
 
@@ -20,7 +20,7 @@ class Study(Base):
     patient: Mapped["Patient"] = relationship(back_populates="studies")
     series: Mapped[List["Series"]] = relationship(back_populates="study")
 
-    @ validates("study_name")
+    @validates("study_name")
     def validate_study_name(self, key, study_name):
         if not 3 <= len(study_name) <= 100:
             raise ValueError(

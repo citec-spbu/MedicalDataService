@@ -1,7 +1,6 @@
 from typing import List
 from sqlalchemy.orm import Mapped, mapped_column, relationship, validates
 from sqlalchemy.types import String
-from sqlalchemy import ForeignKey
 from app.database import (
     int_pk,
     str_nullable,

@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.users.router import router as users_router
-from app.dicom_file.router import router as dicom_router
+from app.upload.router import router as upload_router
 from app.broker.router import router as broker_router
 
 app = FastAPI()
@@ -21,5 +21,5 @@ def home_page():
 
 
 app.include_router(users_router)
-app.include_router(dicom_router)
+app.include_router(upload_router)
 app.include_router(broker_router)
