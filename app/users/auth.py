@@ -26,15 +26,13 @@ async def authenticate_user(user_data: Annotated[SUser, Form()]) -> User:
     """
     Check if user with nickname and password exists in database
     Update hash if the one in database is deprecated
-    :param user_data: user nickname and password
-    :return: User
     """
     user = await UserDAO.find_one_or_none(nickname=user_data.nickname)
     if not user or not verify_password(user_data.password, user.password):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid username or password",
-            headers={"WWW-Authenticate": "Bearer"})
+            detail="Invalid username or password"
+        )
     if pwd_context.needs_update(user.password):
         new_password = get_password_hash(user_data.password)
         user.password = new_password
