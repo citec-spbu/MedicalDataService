@@ -7,6 +7,9 @@ from app.series.models import Series
 from app.studies.models import Study
 from datetime import date, time
 from typing import Optional
+from fastapi import HTTPException
+from sqlalchemy.exc import SQLAlchemyError
+from app.users.models import User
 
 
 class EditDAO:
@@ -51,7 +54,6 @@ class EditDAO:
                     .values(**update_data)
                 )
 
-                # Получаем все instances связанные с пациентом
                 query = select(Instance).join(
                     Series, Series.id == Instance.series_id
                 ).join(
@@ -86,12 +88,12 @@ class EditDAO:
                                 uploader_id: Optional[int] = None) -> bool:
         """Обновляем данные DICOM файла"""
         async with async_session_maker() as session:
-            # Проверяем существование файла
             dicom_file = await cls.get_dicom_file(file_id)
             if not dicom_file:
                 return False
 
             update_data = {}
+
             if file_name is not None:
                 update_data["file_name"] = file_name
             if upload_date is not None:
@@ -99,14 +101,30 @@ class EditDAO:
             if upload_time is not None:
                 update_data["upload_time"] = upload_time
             if uploader_id is not None:
+                # Проверяем существование пользователя перед обновлением
+                user_exists = await session.execute(
+                    select(User).where(User.id == uploader_id)
+                )
+                if not user_exists.scalar_one_or_none():
+                    raise HTTPException(
+                        status_code=404,
+                        detail=f"User with id {uploader_id} not found"
+                    )
                 update_data["uploader_id"] = uploader_id
 
             if update_data:
-                await session.execute(
-                    update(DicomFile)
-                    .where(DicomFile.id == file_id)
-                    .values(**update_data)
-                )
-                await session.commit()
-                return True
+                try:
+                    await session.execute(
+                        update(DicomFile)
+                        .where(DicomFile.id == file_id)
+                        .values(**update_data)
+                    )
+                    await session.commit()
+                    return True
+                except SQLAlchemyError as e:
+                    await session.rollback()
+                    raise HTTPException(
+                        status_code=400,
+                        detail=str(e)
+                    )
         return False 
