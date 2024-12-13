@@ -83,6 +83,7 @@ async def get_dicom_file_info(
         id=dicom_file.id,
         file_name=dicom_file.file_name,
         upload_date=dicom_file.upload_date,
+        upload_time=dicom_file.upload_time if hasattr(dicom_file, 'upload_time') else None,
         uploader_id=dicom_file.uploader_id
     )
 
@@ -111,4 +112,4 @@ async def edit_dicom_file(
             detail="DICOM file not found or no changes were made"
         )
 
-    return {"message": "DICOM file data updated successfully"} 
+    return {"message": "DICOM file data updated successfully"}

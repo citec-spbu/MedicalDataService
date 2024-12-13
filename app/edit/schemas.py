@@ -16,7 +16,7 @@ class DicomFileInfo(BaseModel):
     id: int
     file_name: str
     upload_date: date
-    upload_time: time
+    upload_time: Optional[time] = None
     uploader_id: int
 
 class EditDicomFileData(BaseModel):
