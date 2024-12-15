@@ -18,7 +18,6 @@ interface seriesProps {
   description: string;
   modality: string;
   instancesCount: number;
-  firstInstanceUID?: string;
 }
 
 const ViewerSelector = ({ activeSeries, setActiveSeries }: SelectorProps) => {
@@ -34,27 +33,14 @@ const ViewerSelector = ({ activeSeries, setActiveSeries }: SelectorProps) => {
       const response = await fetch(`${API}/studies/${studyUID}/series`);
       if (response.ok) {
         const data = await response.json();
-        const seriesWithInstances = await Promise.all(
-          data.map(async (series) => {
-            const instancesResponse = await fetch(
-              `${API}/studies/${series["0020000D"]?.["Value"]?.[0]}/series/${
-                series["0020000E"]?.["Value"]?.[0]
-              }/instances`
-            );
-            const instances = await instancesResponse.json();
-            const firstInstanceUID = instances[0]?.["00080018"]?.["Value"]?.[0];
-
-            return {
-              StudyInstanceUID: series["0020000D"]?.["Value"]?.[0],
-              SeriesInstanceUID: series["0020000E"]?.["Value"]?.[0],
-              description: series["0008103E"]?.["Value"]?.[0],
-              modality: series["00080060"]?.["Value"]?.[0],
-              instancesCount: series["00201209"]?.["Value"]?.[0],
-              firstInstanceUID
-            } as seriesProps;
-          })
-        );
-        setSeries(seriesWithInstances);
+        const seriesData = data.map((series) => ({
+          StudyInstanceUID: series["0020000D"]?.["Value"]?.[0],
+          SeriesInstanceUID: series["0020000E"]?.["Value"]?.[0],
+          description: series["0008103E"]?.["Value"]?.[0],
+          modality: series["00080060"]?.["Value"]?.[0],
+          instancesCount: series["00201209"]?.["Value"]?.[0],
+        }));
+        setSeries(seriesData);
         setActiveSeries({
           StudyInstanceUID: studyUID!,
           SeriesInstanceUID: seriesUID!
@@ -88,17 +74,15 @@ const ViewerSelector = ({ activeSeries, setActiveSeries }: SelectorProps) => {
               >
                 <div className="flex flex-col max-w-[224px]">
                   <Card className="w-[224px] h-[126px] relative">
-                    {item.firstInstanceUID && (
-                      <img
-                        src={`${API}/studies/${item.StudyInstanceUID}/series/${item.SeriesInstanceUID}/instances/${item.firstInstanceUID}/preview`}
-                        alt={item.description}
-                        className="w-full h-full object-contain"
-                        loading="lazy"
-                        onError={(e) => {
-                          e.currentTarget.style.display = 'none';
-                        }}
-                      />
-                    )}
+                    <img
+                      src={`${API}/studies/${item.StudyInstanceUID}/series/${item.SeriesInstanceUID}/preview`}
+                      alt={item.description}
+                      className="w-full h-full object-contain"
+                      loading="lazy"
+                      onError={(e) => {
+                        e.currentTarget.style.display = 'none';
+                      }}
+                    />
                     <div className="absolute top-2 left-2 bg-black/50 px-2 py-1 rounded text-white">
                       {item.modality}
                     </div>

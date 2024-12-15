@@ -187,3 +187,63 @@ async def get_instance_preview(study_uid: str, series_uid: str, instance_uid: st
             status_code=500,
             detail=f"Error creating preview: {str(e)}"
         )
+
+
+@router.get("/studies/{study_uid}/series/{series_uid}/preview")
+async def get_series_preview(study_uid: str, series_uid: str):
+    try:
+        instances = await InstanceDAO.get_instances(study_uid=study_uid, series_uid=series_uid)
+        if not instances:
+            raise HTTPException(status_code=404, detail="No instances found")
+
+        instance = instances[0]
+
+        pixel_data = minio_client.get_object(
+            "pixel-data",
+            instance.pixel_data_path
+        ).read()
+
+        image = Image.open(io.BytesIO(pixel_data))
+
+        has_window_center = instance.metadata_.get('00281050', {}).get('Value') is not None
+
+        is_grayscale = image.mode == 'L'
+        has_transparency = 'A' in image.mode
+
+        if has_window_center or is_grayscale or has_transparency:
+            if image.mode != 'L':
+                image = image.convert('L')
+
+            image = Image.eval(image, lambda x: 255 - x)
+
+        original_size = image.size
+        aspect_ratio = original_size[0] / original_size[1]
+
+        if aspect_ratio > 1:
+            preview_size = (256, int(256 / aspect_ratio))
+        else:
+            preview_size = (int(256 * aspect_ratio), 256)
+
+        preview_image = image.resize(preview_size, Image.Resampling.LANCZOS)
+
+        background = Image.new('RGB', (256, 256), 'black')
+
+        x = (256 - preview_size[0]) // 2
+        y = (256 - preview_size[1]) // 2
+
+        background.paste(preview_image, (x, y))
+
+        preview_buffer = io.BytesIO()
+        background.save(preview_buffer, format='PNG')
+        preview_buffer.seek(0)
+
+        return Response(
+            content=preview_buffer.getvalue(),
+            media_type="image/png"
+        )
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error creating preview: {str(e)}"
+        )
