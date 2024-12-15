@@ -6,6 +6,10 @@ from app.instances.dao import InstanceDAO
 from urllib3.filepost import encode_multipart_formdata, choose_boundary
 from urllib3.fields import RequestField
 from app.config import get_minio_client
+from PIL import Image
+import io
+import numpy as np
+import pillow_jpls
 
 router = APIRouter(prefix="/dicomweb", tags=["Access for dicom images and metadata"])
 
@@ -123,3 +127,63 @@ async def get_instance_pixeldata(study_uid: str, series_uid: str, instance_uid: 
         content=body,
         media_type=f"multipart/related; boundary={boundary}"
     )
+
+
+@router.get("/studies/{study_uid}/series/{series_uid}/instances/{instance_uid}/preview")
+async def get_instance_preview(study_uid: str, series_uid: str, instance_uid: str):
+    instance = await InstanceDAO.get_instance(study_uid=study_uid, series_uid=series_uid, instance_uid=instance_uid)
+    if not instance:
+        raise HTTPException(status_code=404, detail="Instance not found")
+
+    try:
+        pixel_data = minio_client.get_object(
+            "pixel-data",
+            instance.pixel_data_path
+        ).read()
+
+        image = Image.open(io.BytesIO(pixel_data))
+
+        # Проверяем наличие WindowCenter в метаданных
+        has_window_center = instance.metadata_.get('00281050', {}).get('Value') is not None
+
+        # Проверяем режим изображения и наличие floating pixels
+        is_grayscale = image.mode == 'L'
+        has_transparency = 'A' in image.mode
+
+        if has_window_center or is_grayscale or has_transparency:
+            if image.mode != 'L':
+                image = image.convert('L')
+
+            image = Image.eval(image, lambda x: 255 - x)
+
+        original_size = image.size
+        aspect_ratio = original_size[0] / original_size[1]
+
+        if aspect_ratio > 1:
+            preview_size = (256, int(256 / aspect_ratio))
+        else:
+            preview_size = (int(256 * aspect_ratio), 256)
+
+        preview_image = image.resize(preview_size, Image.Resampling.LANCZOS)
+
+        background = Image.new('RGB', (256, 256), 'black')
+
+        x = (256 - preview_size[0]) // 2
+        y = (256 - preview_size[1]) // 2
+
+        background.paste(preview_image, (x, y))
+
+        preview_buffer = io.BytesIO()
+        background.save(preview_buffer, format='PNG')
+        preview_buffer.seek(0)
+
+        return Response(
+            content=preview_buffer.getvalue(),
+            media_type="image/png"
+        )
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error creating preview: {str(e)}"
+        )
