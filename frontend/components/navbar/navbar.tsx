@@ -4,6 +4,14 @@ import Link from "next/link";
 import { HomeIcon } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { ModeToggle } from "@/components/themes/theme-button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger
+} from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button";
+import { Cart } from "./cart";
 
 export const Navbar = () => {
   return (
@@ -14,8 +22,16 @@ export const Navbar = () => {
         </CustomLink>
         <CustomLink href="/browser">Проводник</CustomLink>
         <CustomLink href="/viewer">Просмотр файлов</CustomLink>
-        <CustomLink href="/">Фамилия И. О.</CustomLink>
+        <DropdownMenu>
+          <DropdownMenuTrigger>maxik</DropdownMenuTrigger>
+          <DropdownMenuContent>
+            <DropdownMenuItem asChild>
+              <Button>Выйти из аккунта</Button>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
         <ModeToggle />
+        <Cart />
       </ul>
     </nav>
   );

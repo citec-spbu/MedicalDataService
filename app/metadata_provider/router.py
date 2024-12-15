@@ -59,20 +59,21 @@ async def get_study_series(study_uid: str, modality: str | None = None):
             all_series]
 
 
+# @router.get("/studies/{study_uid}/series/{series_uid}")
+# @router.get("/studies/{study_uid}/series/{series_uid}/metadata")
+# async def get_series_metadata(study_uid: str, series_uid: str):
+#     study = await StudyDAO.get_study(instance_uid=study_uid)
+#     if not study:
+#         raise HTTPException(status_code=404, detail="Study not found")
+
+#     series = await SeriesDAO.get_series(study_uid=study_uid, series_uid=series_uid)
+#     if not series:
+#         raise HTTPException(status_code=404, detail="Series not found")
+
+#     return dict(series.to_json(), **{tag: study.to_json()[tag] for tag in ["00081030", "0020000D"]})
+
 @router.get("/studies/{study_uid}/series/{series_uid}")
 @router.get("/studies/{study_uid}/series/{series_uid}/metadata")
-async def get_series_metadata(study_uid: str, series_uid: str):
-    study = await StudyDAO.get_study(instance_uid=study_uid)
-    if not study:
-        raise HTTPException(status_code=404, detail="Study not found")
-
-    series = await SeriesDAO.get_series(study_uid=study_uid, series_uid=series_uid)
-    if not series:
-        raise HTTPException(status_code=404, detail="Series not found")
-
-    return dict(series.to_json(), **{tag: study.to_json()[tag] for tag in ["00081030", "0020000D"]})
-
-
 @router.get("/studies/{study_uid}/series/{series_uid}/instances")
 @router.get("/studies/{study_uid}/series/{series_uid}/instances/metadata")
 async def get_series_instances(study_uid: str, series_uid: str):

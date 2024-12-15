@@ -1,36 +1,121 @@
+import { CaretSortIcon } from "@radix-ui/react-icons";
 import { ColumnDef } from "@tanstack/react-table";
+import { Button } from "../ui/button";
+import { Checkbox } from "../ui/checkbox";
 
 export type Series = {
-  bodyPart: string;
+  date: string;
+  time: string;
   modality: string;
+  physicianName: string;
+  description: string;
+  uid: string;
+  instancesCount: number;
 };
 
-export const seriesColumns: ColumnDef<Series>[] = [
+export const seriesColumns = (
+  onChecked: (description: string, uid: string) => void,
+  onUnchecked: (uid: string) => void
+): ColumnDef<Series>[] => [
   {
-    accessorKey: "bodyPart",
-    header: "Часть тела",
-    cell: ({ row }) => <div>{row.getValue("bodyPart")}</div>
+    id: "select",
+    header: ({ table }) => (
+      <Checkbox
+        checked={
+          table.getIsAllPageRowsSelected() ||
+          (table.getIsSomePageRowsSelected() && "indeterminate")
+        }
+        onCheckedChange={(value) => {
+          table.toggleAllRowsSelected(!!value);
+          table.getRowModel().rows.forEach((row) => {
+            if (!!value) {
+              onChecked(row.original.description, row.original.uid);
+            } else {
+              onUnchecked(row.original.uid);
+            }
+          });
+        }}
+        aria-label="Добавить все"
+      />
+    ),
+    cell: ({ row }) => (
+      <Checkbox
+        onDoubleClick={(e) => e.stopPropagation()}
+        checked={row.getIsSelected()}
+        onCheckedChange={(value) => {
+          row.toggleSelected(!!value);
+          if (!row.getIsSelected()) {
+            onChecked(row.original.description, row.original.uid);
+          } else {
+            onUnchecked(row.original.uid);
+          }
+        }}
+        aria-label="Добавить для выгрузки"
+      />
+    ),
+    enableSorting: false
+  },
+  {
+    accessorKey: "description",
+    header: "Описание",
+    cell: ({ row }) => row.getValue("description")
   },
   {
     accessorKey: "modality",
     header: "Модальность",
-    cell: ({ row }) => (
-      <div className="uppercase">{row.getValue("modality")}</div>
-    )
-  }
-];
-
-export const seriesData: Series[] = [
-  {
-    bodyPart: "Finger",
-    modality: "CT"
+    cell: ({ row }) => row.getValue("modality")
   },
   {
-    bodyPart: "Leg",
-    modality: "WC"
+    accessorKey: "physicianName",
+    header: "Имя врача",
+    cell: ({ row }) => row.getValue("physicianName")
   },
   {
-    bodyPart: "Abdomen",
-    modality: "KW"
+    accessorKey: "date",
+    header: ({ column }) => {
+      return (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          className="font-bold"
+        >
+          Дата съемки
+          <CaretSortIcon className="ml-2 h-6 w-6" />
+        </Button>
+      );
+    },
+    cell: ({ row }) => row.getValue("date")
+  },
+  {
+    accessorKey: "time",
+    header: ({ column }) => {
+      return (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          className="font-bold"
+        >
+          Время съемки
+          <CaretSortIcon className="ml-2 h-6 w-6" />
+        </Button>
+      );
+    },
+    cell: ({ row }) => row.getValue("time")
+  },
+  {
+    accessorKey: "instancesCount",
+    header: ({ column }) => {
+      return (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          className="font-bold"
+        >
+          Количество изображений
+          <CaretSortIcon className="ml-2 h-6 w-6" />
+        </Button>
+      );
+    },
+    cell: ({ row }) => row.getValue("instancesCount")
   }
 ];

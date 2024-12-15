@@ -109,7 +109,7 @@ export const RegisterForm = () => {
               type="submit"
               className="w-full bg-ring"
             >
-              Зарегестрироваться
+              Зарегистрироваться
             </Button>
           </div>
         </form>

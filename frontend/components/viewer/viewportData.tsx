@@ -2,7 +2,7 @@ import { Enums, Types } from "@cornerstonejs/core";
 import { useEffect, useState } from "react";
 
 interface ViewportDataProps {
-  viewport: Types.IVolumeViewport | null;
+  viewport: Types.IVolumeViewport | Types.IStackViewport | null;
   element: HTMLDivElement | null;
 }
 
@@ -31,12 +31,14 @@ const ViewportData = ({ viewport, element }: ViewportDataProps) => {
         setVoi({ upper: voiProperties.upper, lower: voiProperties.lower });
     };
 
-    const { VOLUME_NEW_IMAGE, VOI_MODIFIED } = Enums.Events;
+    const { VOLUME_NEW_IMAGE, STACK_NEW_IMAGE, VOI_MODIFIED } = Enums.Events;
 
     element?.addEventListener(VOLUME_NEW_IMAGE, handleScrolling);
+    element?.addEventListener(STACK_NEW_IMAGE, handleScrolling);
     element?.addEventListener(VOI_MODIFIED, handleVoi);
     return () => {
       element?.removeEventListener(VOLUME_NEW_IMAGE, handleScrolling);
+      element?.removeEventListener(STACK_NEW_IMAGE, handleScrolling);
       element?.removeEventListener(VOI_MODIFIED, handleVoi);
     };
   });
@@ -47,7 +49,7 @@ const ViewportData = ({ viewport, element }: ViewportDataProps) => {
         {imageIndex} / {imageCount}
       </p>
       <p>WW : {voi?.upper}</p>
-      <p>WL : {voi?.lower}</p>
+      <p>WC : {voi?.lower}</p>
     </>
   );
 };

@@ -3,6 +3,7 @@ import { CaretSortIcon } from "@radix-ui/react-icons";
 import { Button } from "@/components/ui/button";
 
 export type Patient = {
+  id: number;
   name: string;
   sex: string;
   birthDate: string;
@@ -44,24 +45,6 @@ export const patientColumns: ColumnDef<Patient>[] = [
         </Button>
       );
     },
-    cell: ({ row }) => <div>{row.getValue("birthDate")}</div>
-  }
-];
-
-export const patientData: Patient[] = [
-  {
-    name: "Vasiliy A.O.",
-    sex: "M",
-    birthDate: new Date("1998-10-10").toISOString().slice(0, 10)
-  },
-  {
-    name: "Anatoliy B.F.",
-    sex: "M",
-    birthDate: new Date("2004-12-31").toISOString().slice(0, 10)
-  },
-  {
-    name: "Jabova A.N.",
-    sex: "F",
-    birthDate: new Date("2012-09-11").toISOString().slice(0, 10)
+    cell: ({ row }) => row.getValue("birthDate")
   }
 ];

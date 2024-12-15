@@ -9,57 +9,110 @@ import {
   TableRow
 } from "@/components/ui/table";
 import {
-  ColumnFiltersState,
   flexRender,
   getCoreRowModel,
   getFilteredRowModel,
-  getPaginationRowModel,
   getSortedRowModel,
-  SortingState,
   useReactTable
 } from "@tanstack/react-table";
-import { useRef, useState } from "react";
 import { Input } from "@/components/ui/input";
 
-const mapper = {
-  0: [patientData, patientColumns],
-  1: [studyData, studyColumns],
-  2: [seriesData, seriesColumns],
-  3: [imageData, imageColumns]
-};
-
-import { patientData, patientColumns } from "@/components/browser/patientTable";
-import { studyData, studyColumns } from "@/components/browser/studyTable";
-import { seriesData, seriesColumns } from "@/components/browser/seriesTable";
-import { imageData, imageColumns } from "@/components/browser/imageTable";
+import { patientColumns } from "@/components/browser/patientTable";
+import { studyColumns } from "@/components/browser/studyTable";
+import { seriesColumns } from "@/components/browser/seriesTable";
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbSeparator
+} from "../ui/breadcrumb";
+import useTableData from "./hooks/useTableData";
+import { useRouter, useSearchParams } from "next/navigation";
+import Link from "next/link";
+import { useCartDispatch } from "@/stores";
+import { addToCart, removeFromCart } from "@/stores/cart";
 
 export const DataTable = () => {
-  const [sorting, setSorting] = useState<SortingState>([]);
-  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
+  const searchParams = useSearchParams();
 
-  const tableState = useRef(0);
-  const [data, setData] = useState(patientData);
-  const [columns, setColumns] = useState(patientColumns);
+  const router = useRouter();
+  const dispatch = useCartDispatch();
+
+  const patient_id = searchParams.get("PatientID");
+  const study_uid = searchParams.get("StudyUID");
+
+  const {
+    tableData,
+    sorting,
+    setSorting,
+    columnFilters,
+    setColumnFilters,
+    rowSelection,
+    setRowSelection
+  } = useTableData(patient_id, study_uid);
+
+  const activeTabMapper = {
+    patient: patientColumns,
+    study: studyColumns,
+    series: seriesColumns(
+      (description, uid) =>
+        dispatch(addToCart({ patient_id, description: description, uid: uid })),
+      (uid) => dispatch(removeFromCart({ patient_id, uid: uid }))
+    )
+  } as const;
 
   const table = useReactTable({
-    data: data,
-    columns: columns,
+    data: tableData?.data,
+    columns: activeTabMapper[tableData?.activeTab],
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
     getCoreRowModel: getCoreRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
+    onRowSelectionChange: setRowSelection,
     state: {
       sorting,
-      columnFilters
+      columnFilters,
+      rowSelection
     }
   });
 
   return (
     <div className="w-full">
+      <Breadcrumb>
+        <BreadcrumbList>
+          <BreadcrumbItem>
+            <BreadcrumbLink asChild>
+              <Link href="/browser">Главная</Link>
+            </BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator />
+          {tableData.activeTab != "patient" && (
+            <>
+              <BreadcrumbItem>
+                <BreadcrumbLink asChild>
+                  <Link href={`/browser?PatientID=${patient_id}`}>Пациент</Link>
+                </BreadcrumbLink>
+              </BreadcrumbItem>
+              <BreadcrumbSeparator />
+            </>
+          )}
+          {tableData.activeTab == "series" && (
+            <BreadcrumbItem>
+              <BreadcrumbLink asChild>
+                <Link
+                  href={`/browser?PatientID=${patient_id}&StudyUID=${study_uid}`}
+                >
+                  Исследование
+                </Link>
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+          )}
+        </BreadcrumbList>
+      </Breadcrumb>
       <div className="flex items-center justify-start py-4">
-        {columns === patientColumns && (
+        {tableData?.activeTab === "patient" && (
           <Input
             placeholder="Поиск по фамилии"
             value={(table.getColumn("name")?.getFilterValue() as string) ?? ""}
@@ -77,7 +130,7 @@ export const DataTable = () => {
               <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map((header) => {
                   return (
-                    <TableHead key={header.id}>
+                    <TableHead key={header.id} className="text-center">
                       {header.isPlaceholder
                         ? null
                         : flexRender(
@@ -101,15 +154,23 @@ export const DataTable = () => {
                     }
                   }}
                   onDoubleClick={() => {
-                    tableState.current = (tableState.current + 1) % 4;
-
-                    table.resetSorting();
-                    setData(mapper[tableState.current][0]);
-                    setColumns(mapper[tableState.current][1]);
+                    if (tableData.activeTab == "patient") {
+                      router.push(`/browser?PatientID=${row.original["id"]}`);
+                    }
+                    if (tableData.activeTab == "study") {
+                      router.push(
+                        `/browser?PatientID=${patient_id}&StudyUID=${row.original["uid"]}`
+                      );
+                    }
+                    if (tableData.activeTab == "series") {
+                      router.push(
+                        `/viewer?StudyUID=${study_uid}&SeriesUID=${row.original["uid"]}`
+                      );
+                    }
                   }}
                 >
                   {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>
+                    <TableCell key={cell.id} className="text-center">
                       {flexRender(
                         cell.column.columnDef.cell,
                         cell.getContext()

@@ -27,7 +27,7 @@ import {
   TooltipTrigger
 } from "../ui/tooltip";
 
-import { IVolumeViewport } from "@cornerstonejs/core/types";
+import { IStackViewport, IVolumeViewport } from "@cornerstonejs/core/types";
 import {
   PanTool,
   WindowLevelTool,
@@ -43,6 +43,7 @@ import * as cornerstoneTools from "@cornerstonejs/tools";
 import { MouseBindings } from "@cornerstonejs/tools/enums";
 import { OrientationAxis } from "@cornerstonejs/core/enums";
 import { ToolsButton } from "./ui/tools-button";
+import { Enums } from "@cornerstonejs/core";
 
 const toolGroupId = "TOOL_GROUP_ID";
 const toolGroup = ToolGroupManager.createToolGroup(toolGroupId);
@@ -74,7 +75,7 @@ ToggleButtons.forEach((button) => {
 });
 
 interface ToolsProps {
-  viewport: IVolumeViewport | null;
+  viewport: IVolumeViewport | IStackViewport | null;
   isLoaded: boolean;
 }
 
@@ -84,11 +85,14 @@ const ViewerTools = ({ viewport, isLoaded }: ToolsProps) => {
     OrientationAxis.AXIAL
   );
   useEffect(() => {
-    if (isLoaded) toolGroup?.addViewport(viewport!.id);
+    if (isLoaded) {
+      toolGroup?.addViewport(viewport!.id);
+    }
   }, [isLoaded, viewport]);
 
   useEffect(() => {
-    viewport?.setOrientation(axisType);
+    if (viewport?.type == Enums.ViewportType.ORTHOGRAPHIC)
+      (viewport as IVolumeViewport)?.setOrientation(axisType);
   }, [axisType, viewport]);
 
   useEffect(() => {
@@ -146,7 +150,11 @@ const ViewerTools = ({ viewport, isLoaded }: ToolsProps) => {
             <Tooltip>
               <DropdownMenuTrigger asChild>
                 <TooltipTrigger className="capitalize" asChild>
-                  <Button variant="outline" className="border-none h-full">
+                  <Button
+                    variant="outline"
+                    className="border-none h-full"
+                    disabled={viewport?.type == Enums.ViewportType.STACK}
+                  >
                     {axisType}
                   </Button>
                 </TooltipTrigger>
