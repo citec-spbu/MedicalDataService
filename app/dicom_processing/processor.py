@@ -136,7 +136,7 @@ class DicomProcessor:
             else:
                 series = await SeriesDAO.find_one_or_none(instance_uid=series_data["instance_uid"])
 
-            # извекаем пиксельные данные
+            # Извлечение пиксельных данных
             pixel_data = None
             if hasattr(ds, 'PixelData'):
                 try:
@@ -144,11 +144,15 @@ class DicomProcessor:
                 except Exception as e:
                     logger.error(f"Error extracting pixel data: {str(e)}")
 
-            # создаем метаданные в формате JSON
+            # Создание метаданных в формате JSON
             json_metadata = {}
             for field in ds:
                 try:
-                    if (field.tag.json_key == "7FE00010"):
+                    # Исключение имени пациента и даты рождения
+                    if field.tag.json_key in {"00100010", "00100030"}:  # Tags for PatientName and PatientBirthDate
+                        continue
+
+                    if field.tag.json_key == "7FE00010":
                         json_metadata[field.tag.json_key] = {
                             "vr": field.VR,
                             "BulkDataURI": f"instances/{ds.SOPInstanceUID}/frames"
@@ -161,7 +165,7 @@ class DicomProcessor:
                 except Exception as e:
                     logger.error(f"Error processing metadata field {field.tag}: {str(e)}")
 
-            # сохраняем пиксельные данные в MinIO
+            # Сохраняем пиксельные данные в MinIO
             pixel_data_path = None
             if pixel_data:
                 pixel_data_path = DicomProcessor.store_pixel_data(
@@ -169,7 +173,7 @@ class DicomProcessor:
                     pixel_data
                 )
 
-            # создаем запись в БД
+            # Создаем запись в БД
             instance_data = {
                 "sop_instance_uid": ds.SOPInstanceUID,
                 "series_id": series.id,
