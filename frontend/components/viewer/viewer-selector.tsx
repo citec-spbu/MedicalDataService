@@ -1,38 +1,106 @@
-import { memo } from "react";
+import { memo, useEffect, useState } from "react";
 import { Card } from "../ui/card";
-import { Series } from "./hooks/useViewportRef";
 import { Tabs, TabsList, TabsTrigger } from "../ui/tabs";
+import { ScrollArea } from "../ui/scroll-area";
+import { useSearchParams } from "next/navigation";
+import { activeSeriesProps } from "./viewer";
+import { CubeIcon } from "@radix-ui/react-icons";
 
+const API = process.env.API;
 interface SelectorProps {
-  study: Series[];
-  activeIdx: string;
-  setActiveIdx: (value: string) => void;
+  activeSeries: activeSeriesProps | null;
+  setActiveSeries: (series: activeSeriesProps) => void;
 }
 
-const ViewerSelector = ({ study, activeIdx, setActiveIdx }: SelectorProps) => {
+interface seriesProps {
+  StudyInstanceUID: string;
+  SeriesInstanceUID: string;
+  description: string;
+  modality: string;
+  instancesCount: number;
+}
+
+const ViewerSelector = ({ activeSeries, setActiveSeries }: SelectorProps) => {
+  const searchParams = useSearchParams();
+
+  const studyUID = searchParams.get("StudyUID");
+  const seriesUID = searchParams.get("SeriesUID");
+
+  const [series, setSeries] = useState<seriesProps[]>([]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      const response = await fetch(`${API}/studies/${studyUID}/series`);
+      if (response.ok) {
+        const data = await response.json();
+        const seriesData = data.map((series) => ({
+          StudyInstanceUID: series["0020000D"]?.["Value"]?.[0],
+          SeriesInstanceUID: series["0020000E"]?.["Value"]?.[0],
+          description: series["0008103E"]?.["Value"]?.[0],
+          modality: series["00080060"]?.["Value"]?.[0],
+          instancesCount: series["00201209"]?.["Value"]?.[0],
+        }));
+        setSeries(seriesData);
+        setActiveSeries({
+          StudyInstanceUID: studyUID!,
+          SeriesInstanceUID: seriesUID!
+        });
+      }
+    };
+    fetchData();
+  }, [studyUID, seriesUID, setActiveSeries]);
+
   return (
     <Card className="h-full w-[300px]">
       <Tabs
         orientation="vertical"
-        value={activeIdx}
+        defaultValue={JSON.stringify(activeSeries)}
+        value={JSON.stringify(activeSeries)}
         onValueChange={(value) => {
-          if (value) setActiveIdx(value);
+          if (value) setActiveSeries(JSON.parse(value));
         }}
-        className="w-full h-full p-2"
+        className="w-full h-full p-4"
       >
         <TabsList className="flex-col w-full h-full justify-start bg-card gap-2">
-          {study.map((series, idx) => (
-            <TabsTrigger
-              key={series.SeriesInstanceUID}
-              value={String(idx)}
-              className="w-full data-[state=active]:bg-muted pt-4"
-            >
-              <div className="flex flex-col">
-                <Card className="w-[240px] h-[135px]"></Card>
-                qwe
-              </div>
-            </TabsTrigger>
-          ))}
+          <ScrollArea className="p-4" type="auto">
+            {series.map((item) => (
+              <TabsTrigger
+                key={item.SeriesInstanceUID}
+                value={JSON.stringify({
+                  StudyInstanceUID: item.StudyInstanceUID,
+                  SeriesInstanceUID: item.SeriesInstanceUID
+                } as activeSeriesProps)}
+                className="w-full data-[state=active]:bg-muted pt-4"
+              >
+                <div className="flex flex-col max-w-[224px]">
+                  <Card className="w-[224px] h-[126px] relative">
+                    <img
+                      src={`${API}/studies/${item.StudyInstanceUID}/series/${item.SeriesInstanceUID}/preview`}
+                      alt={item.description}
+                      className="w-full h-full object-contain"
+                      loading="lazy"
+                      onError={(e) => {
+                        e.currentTarget.style.display = 'none';
+                      }}
+                    />
+                    <div className="absolute top-2 left-2 bg-black/50 px-2 py-1 rounded text-white">
+                      {item.modality}
+                    </div>
+                  </Card>
+                  <div className="w-full grid grid-cols-[8fr_1fr_1fr]">
+                    <div
+                      className="text-nowrap text-ellipsis overflow-hidden text-start"
+                      title={item.description}
+                    >
+                      {item.description}
+                    </div>
+                    <CubeIcon className="self-center justify-self-center" />
+                    {item.instancesCount}
+                  </div>
+                </div>
+              </TabsTrigger>
+            ))}
+          </ScrollArea>
         </TabsList>
       </Tabs>
     </Card>

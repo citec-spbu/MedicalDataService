@@ -85,13 +85,13 @@ export const LoginForm = () => {
                 </FormItem>
               )}
             ></FormField>
-            
+
             <FormError message={state?.message} />
             <Button
               disabled={isPending}
               variant="default"
               type="submit"
-              className="w-full text-white bg-ring"
+              className="w-full bg-ring"
             >
               Войти
             </Button>

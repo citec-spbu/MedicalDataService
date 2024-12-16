@@ -3,18 +3,29 @@ import { CaretSortIcon } from "@radix-ui/react-icons";
 import { Button } from "@/components/ui/button";
 
 export type Study = {
-  protocolName: string;
-  studyDate: string;
+  date: string;
+  time: string;
+  modalities: string[];
+  description: string;
+  uid: string;
+  seriesCount: number;
+  instancesCount: number;
 };
 
 export const studyColumns: ColumnDef<Study>[] = [
   {
-    accessorKey: "protocolName",
-    header: "Название протокола",
-    cell: ({ row }) => <div>{row.getValue("protocolName")}</div>
+    accessorKey: "description",
+    header: "Описание",
+    cell: ({ row }) => row.getValue("description")
   },
   {
-    accessorKey: "studyDate",
+    accessorKey: "modalities",
+    header: "Модальности",
+    cell: ({ row }) =>
+      (row.getValue("modalities") satisfies string[]).join(", ")
+  },
+  {
+    accessorKey: "date",
     header: ({ column }) => {
       return (
         <Button
@@ -27,21 +38,54 @@ export const studyColumns: ColumnDef<Study>[] = [
         </Button>
       );
     },
-    cell: ({ row }) => <div>{row.getValue("studyDate")}</div>
-  }
-];
-
-export const studyData: Study[] = [
-  {
-    protocolName: "Hand / Finger ABC DE",
-    studyDate: new Date("1998-10-10").toISOString().slice(0, 10)
+    cell: ({ row }) => row.getValue("date")
   },
   {
-    protocolName: "Leg / Ankle QWE GG",
-    studyDate: new Date("2004-12-31").toISOString().slice(0, 10)
+    accessorKey: "time",
+    header: ({ column }) => {
+      return (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          className="font-bold"
+        >
+          Время съемки
+          <CaretSortIcon className="ml-2 h-6 w-6" />
+        </Button>
+      );
+    },
+    cell: ({ row }) => row.getValue("time")
   },
   {
-    protocolName: "Chest / Abdomen HCT GG",
-    studyDate: new Date("2012-09-11").toISOString().slice(0, 10)
+    accessorKey: "seriesCount",
+    header: ({ column }) => {
+      return (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          className="font-bold"
+        >
+          Количество серий
+          <CaretSortIcon className="ml-2 h-6 w-6" />
+        </Button>
+      );
+    },
+    cell: ({ row }) => row.getValue("seriesCount")
+  },
+  {
+    accessorKey: "instancesCount",
+    header: ({ column }) => {
+      return (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          className="font-bold"
+        >
+          Количество изображений
+          <CaretSortIcon className="ml-2 h-6 w-6" />
+        </Button>
+      );
+    },
+    cell: ({ row }) => row.getValue("instancesCount")
   }
 ];

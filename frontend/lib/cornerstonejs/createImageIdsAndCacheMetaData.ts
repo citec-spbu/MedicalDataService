@@ -12,30 +12,44 @@ import cornerstoneDICOMImageLoader from "@cornerstonejs/dicom-image-loader";
  * @returns {string[]} An array of imageIds for instances in the study.
  */
 
+interface SearchParams {
+  StudyInstanceUID: string;
+  SeriesInstanceUID: string;
+  wadoRsRoot: string;
+}
+
+interface ReturnParams {
+  imageIds: string[];
+  viewportType: "volume" | "stack";
+}
+
 export default async function createImageIdsAndCacheMetaData({
   StudyInstanceUID,
   SeriesInstanceUID,
-  SOPInstanceUID = null,
-  wadoRsRoot,
-  client = null
-}) {
+  wadoRsRoot
+}: SearchParams): Promise<ReturnParams> {
   const SOP_INSTANCE_UID = "00080018";
   const SERIES_INSTANCE_UID = "0020000E";
+  const PIXEL_SPACING = "00280030";
 
   const studySearchOptions = {
     studyInstanceUID: StudyInstanceUID,
     seriesInstanceUID: SeriesInstanceUID
   };
 
-  client =
-    client ||
-    new api.DICOMwebClient({ url: wadoRsRoot as string, singlepart: true });
-  const instances = await client.retrieveSeriesMetadata(studySearchOptions);
-  const imageIds = instances.map((instanceMetaData) => {
-    const SeriesInstanceUID = instanceMetaData[SERIES_INSTANCE_UID].Value[0];
-    const SOPInstanceUIDToUse =
-      SOPInstanceUID || instanceMetaData[SOP_INSTANCE_UID].Value[0];
+  const client = new api.DICOMwebClient({
+    url: wadoRsRoot as string,
+    singlepart: false
+  });
 
+  const instances = await client.retrieveSeriesMetadata(studySearchOptions);
+  let viewportType: "volume" | "stack" = "volume";
+  const imageIds = instances.map((instanceMetaData) => {
+    const SeriesInstanceUID = instanceMetaData[SERIES_INSTANCE_UID]?.Value![0];
+    const SOPInstanceUIDToUse = instanceMetaData[SOP_INSTANCE_UID]?.Value![0];
+    if (instanceMetaData[PIXEL_SPACING] === undefined) {
+      viewportType = "stack";
+    }
     const prefix = "wadors:";
 
     const imageId =
@@ -59,5 +73,5 @@ export default async function createImageIdsAndCacheMetaData({
   // we don't want to add non-pet
   // Note: for 99% of scanners SUV calculation is consistent bw slices
 
-  return imageIds;
+  return { imageIds: imageIds, viewportType: viewportType };
 }

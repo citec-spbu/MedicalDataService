@@ -1,6 +1,9 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  env: {
+    API: "http://localhost:8000/dicomweb"
+  },
   webpack: (config) => {
     // resolve fs for one of the dependencies
     config.resolve.fallback = {
