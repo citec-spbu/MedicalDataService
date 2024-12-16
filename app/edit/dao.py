@@ -2,7 +2,6 @@ from sqlalchemy import select, update
 from app.database import async_session_maker
 from app.patients.models import Patient
 from app.dicom_file.models import DicomFile
-from app.instances.models import Instance
 from app.series.models import Series
 from app.studies.models import Study
 from datetime import date, time
@@ -38,56 +37,55 @@ class EditDAO:
             return result.scalar_one_or_none()
 
     @classmethod
+    async def _validate_and_prepare_update_data(cls, session, **kwargs) -> dict:
+        """Проверка существования связанных данных и подготовка данных для обновления."""
+        update_data = {}
+
+        if 'uploader_id' in kwargs and kwargs['uploader_id'] is not None:
+            user_exists = await session.execute(
+                select(User).where(User.id == kwargs['uploader_id'])
+            )
+            if not user_exists.scalar_one_or_none():
+                raise HTTPException(status_code=404, detail=f"User with id {kwargs['uploader_id']} not found")
+            update_data['uploader_id'] = kwargs['uploader_id']
+
+        for key, value in kwargs.items():
+            if key != 'uploader_id' and value is not None:
+                update_data[key] = value
+
+        if not update_data:
+            raise HTTPException(status_code=400, detail="No data to update")
+
+        return update_data
+
+    @classmethod
     async def update_patient(cls, patient_id: int, name: Optional[str] = None,
                              birth_date: Optional[date] = None) -> bool:
-        """Обновляем данные пациента и связанные метаданные."""
+        """Обновляем данные пациента."""
         async with await cls._get_session() as session:
-            # Получаем пациента
             patient = await cls.get_patient(patient_id)
             if not patient:
                 raise HTTPException(status_code=404, detail="Patient not found")
 
-            # Составляем данные для обновления
             update_data = {}
             if name:
                 update_data["name"] = name
             if birth_date:
                 update_data["birth_date"] = birth_date
 
-            # Если данные для обновления отсутствуют
             if not update_data:
                 raise HTTPException(status_code=400, detail="No data to update")
 
-            # Выполняем обновление данных пациента
             try:
                 await session.execute(
                     update(Patient)
                     .where(Patient.id == patient_id)
                     .values(**update_data)
                 )
-
-                # Обновление связанных данных в Instance
-                query = select(Instance).join(Series).join(Study).where(Study.patient_id == patient_id)
-                result = await session.execute(query)
-                instances = result.scalars().all()
-
-                # Обновляем метаданные для каждого Instance
-                for instance in instances:
-                    metadata = instance.metadata_
-                    if name:
-                        metadata["00100010"]["Value"] = [{"Alphabetic": name}]
-                    if birth_date:
-                        metadata["00100030"]["Value"] = [birth_date.strftime("%Y%m%d")]
-
-                    await session.execute(
-                        update(Instance).where(Instance.id == instance.id).values(metadata_=metadata)
-                    )
-
-                # Завершаем транзакцию
                 await session.commit()
                 return True
             except SQLAlchemyError as e:
-                await session.rollback()  # Откат транзакции в случае ошибки
+                await session.rollback()
                 raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
 
     @classmethod
@@ -101,29 +99,15 @@ class EditDAO:
             if not dicom_file:
                 raise HTTPException(status_code=404, detail="DICOM file not found")
 
-            # Составляем данные для обновления
-            update_data = {}
-            if file_name:
-                update_data["file_name"] = file_name
-            if upload_date:
-                update_data["upload_date"] = upload_date
-            if upload_time:
-                update_data["upload_time"] = upload_time
-            if uploader_id:
-                # Проверка существования пользователя перед обновлением
-                user_exists = await session.execute(
-                    select(User).where(User.id == uploader_id)
-                )
-                if not user_exists.scalar_one_or_none():
-                    raise HTTPException(status_code=404, detail=f"User with id {uploader_id} not found")
-                update_data["uploader_id"] = uploader_id
-
-            # Если данных для обновления нет
-            if not update_data:
-                raise HTTPException(status_code=400, detail="No data to update")
-
             try:
-                # Выполняем обновление данных DICOM файла
+                update_data = await cls._validate_and_prepare_update_data(
+                    session,
+                    file_name=file_name,
+                    upload_date=upload_date,
+                    upload_time=upload_time,
+                    uploader_id=uploader_id
+                )
+
                 await session.execute(
                     update(DicomFile)
                     .where(DicomFile.id == file_id)
@@ -132,5 +116,5 @@ class EditDAO:
                 await session.commit()
                 return True
             except SQLAlchemyError as e:
-                await session.rollback()  # Откат транзакции в случае ошибки
+                await session.rollback()
                 raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")

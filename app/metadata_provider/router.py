@@ -8,8 +8,6 @@ from urllib3.fields import RequestField
 from app.config import get_minio_client
 from PIL import Image
 import io
-import numpy as np
-import pillow_jpls
 
 router = APIRouter(prefix="/dicomweb", tags=["Access for dicom images and metadata"])
 
@@ -94,10 +92,26 @@ async def get_series_instances(study_uid: str, series_uid: str):
 
 @router.get("/studies/{study_uid}/series/{series_uid}/instances/{instance_uid}/metadata")
 async def get_instance_metadata(study_uid: str, series_uid: str, instance_uid: str):
-    instance = await InstanceDAO.get_instance(study_uid=study_uid, series_uid=series_uid, instance_uid=instance_uid)
-    if not instance:
-        raise HTTPException(status_code=404, detail="Instance not found")
-    return instance.metadata_
+    try:
+        # Извлекаем конкретный экземпляр
+        instance = await InstanceDAO.get_instance(study_uid=study_uid, series_uid=series_uid, instance_uid=instance_uid)
+        if not instance:
+            raise HTTPException(status_code=404, detail="Instance not found")
+
+        # Извлекаем серию и проверяем, что она существует
+        series = await SeriesDAO.get_series(study_uid=study_uid, series_uid=series_uid)
+        if not series:
+            raise HTTPException(status_code=404, detail="Series not found")
+
+        # Извлекаем информацию о пациенте
+        patient = await PatientDAO.find_one_or_none(id=series.patient_id)
+        if not patient:
+            raise HTTPException(status_code=404, detail="Patient not found")
+
+        # Добавляем имя и дату рождения пациента в метадату экземпляра
+        return dict(instance.metadata_, patient_name=patient.name, patient_birth_date=patient.birth_date)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error retrieving instance metadata: {str(e)}")
 
 
 @router.get("/studies/{study_uid}/series/{series_uid}/instances/{instance_uid}/frames/1")
