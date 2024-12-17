@@ -22,14 +22,19 @@ def create_jwt(token_type: str,
 
 
 def create_access_token(user: User) -> str:
-    jwt_payload = {"sub": user.nickname}
+    jwt_payload = {
+        "sub": user.nickname,
+        "role": user.role.name
+    }
     return create_jwt(token_type=ACCESS_TOKEN_TYPE,
                       token_data=jwt_payload,
                       expire_minutes=jwt_settings.access_token_expire_minutes)
 
 
 def create_refresh_token(user: User) -> str:
-    jwt_payload = {"sub": user.nickname}
+    jwt_payload = {
+        "sub": user.nickname,
+    }
     return create_jwt(token_type=REFRESH_TOKEN_TYPE,
                       token_data=jwt_payload,
                       expire_timedelta=timedelta(
