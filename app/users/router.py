@@ -80,7 +80,6 @@ def authorize_user(
              summary="Refresh access token using refresh token",
              response_model=TokenInfo)
 async def refresh_access_token(
-        response: Response,
         refresh_token: Optional[str] = Cookie(None)
 ):
     if not refresh_token:
@@ -95,17 +94,6 @@ async def refresh_access_token(
         user = await get_user_by_token_sub(payload)
 
         new_access_token = create_access_token(user)
-        new_refresh_token = create_refresh_token(user)
-
-        # обновляем refresh token в куках
-        response.set_cookie(
-            key="refresh_token",
-            value=new_refresh_token,
-            httponly=True,
-            secure=False,
-            samesite="lax",
-            max_age=60 * 60 * 24 * 30
-        )
 
         return TokenInfo(access_token=new_access_token)
     except Exception as e:
