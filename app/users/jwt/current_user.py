@@ -37,24 +37,32 @@ def get_current_token_payload(
 
 
 def validate_token_type(payload: dict, token_type: str) -> bool:
+    """
+    Проверяет тип токена
+    """
     current_token_type = payload.get(TOKEN_TYPE_FILED)
     if current_token_type != token_type:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,
-                            detail=f"Invalid token type: {
-                                current_token_type!r}, "
-                            f"expected: {token_type!r}",
-                            headers={"WWW-Authenticate": "Bearer"})
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=f"Invalid token type: {current_token_type!r}, "
+                   f"expected: {token_type!r}",
+            headers={"WWW-Authenticate": "Bearer"}
+        )
     return True
 
 
 async def get_user_by_token_sub(payload: dict) -> SUser:
+    """
+    Получает пользователя по subject из токена
+    """
     nickname: str = payload.get("sub")
     user = await UserDAO.find_one_or_none(nickname=nickname)
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid token (user not found)",
-            headers={"WWW-Authenticate": "Bearer"})
+            headers={"WWW-Authenticate": "Bearer"}
+        )
     return user
 
 
