@@ -1,7 +1,8 @@
 "use client";
 
 import { ColumnFiltersState, SortingState } from "@tanstack/react-table";
-import { useEffect, useState } from "react";
+import { cache, useEffect, useState } from "react";
+import api from "@/lib/api";
 
 interface TableData {
   data: any[];
@@ -12,7 +13,6 @@ export default function useTableData(
   patient_id: string | null,
   study_uid: string | null
 ) {
-  const API = process.env.API;
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [rowSelection, setRowSelection] = useState({});
@@ -23,11 +23,9 @@ export default function useTableData(
   });
 
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchData = cache(async () => {
       if (!patient_id) {
-        const response = await fetch(`${API}/patients`).then((data) =>
-          data.json()
-        );
+        const response = (await api.get(`/dicomweb/patients`)).data;
 
         setTableData({
           data: response.map((patient) => {
@@ -44,9 +42,9 @@ export default function useTableData(
           activeTab: "patient"
         });
       } else if (!study_uid) {
-        const response = await fetch(
-          `${API}/studies?patient_id=${patient_id}`
-        ).then((data) => data.json());
+        const response = (
+          await api(`/dicomweb/studies?patient_id=${patient_id}`)
+        ).data;
 
         setTableData({
           data: response.map((study) => {
@@ -68,9 +66,8 @@ export default function useTableData(
           activeTab: "study"
         });
       } else {
-        const response = await fetch(`${API}/studies/${study_uid}/series`).then(
-          (data) => data.json()
-        );
+        const response = (await api(`/dicomweb/studies/${study_uid}/series`))
+          .data;
 
         setTableData({
           data: response.map((series) => {
@@ -92,11 +89,11 @@ export default function useTableData(
           activeTab: "series"
         });
       }
-    };
+    });
     fetchData();
     setSorting([]);
     setColumnFilters([]);
-  }, [patient_id, study_uid, API]);
+  }, [patient_id, study_uid]);
 
   return {
     tableData,

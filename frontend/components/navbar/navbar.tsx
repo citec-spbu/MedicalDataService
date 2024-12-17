@@ -12,8 +12,21 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { Cart } from "./cart";
+import { useEffect, useState } from "react";
+import { useUserContext } from "@/providers/user-provider";
 
 export const Navbar = () => {
+  const pathname = usePathname();
+  const [viewerQueryParams, setViewerQueryParams] = useState<string | null>(
+    null
+  );
+  const user = useUserContext();
+
+  useEffect(() => {
+    if (window !== undefined) {
+      setViewerQueryParams(localStorage.getItem("viewerQueryParams"));
+    }
+  }, [pathname]);
   return (
     <nav className="flex justify-center w-full h-16 overflow-hidden sticky top-0 bg-background">
       <ul className="w-full h-full flex justify-around items-center max-w-[1000px] text-xl">
@@ -21,9 +34,11 @@ export const Navbar = () => {
           <HomeIcon />
         </CustomLink>
         <CustomLink href="/browser">Проводник</CustomLink>
-        <CustomLink href="/viewer">Просмотр файлов</CustomLink>
+        <CustomLink href={`/viewer${viewerQueryParams ?? ""}`}>
+          Просмотр файлов
+        </CustomLink>
         <DropdownMenu>
-          <DropdownMenuTrigger>maxik</DropdownMenuTrigger>
+          <DropdownMenuTrigger>{user.name}</DropdownMenuTrigger>
           <DropdownMenuContent>
             <DropdownMenuItem asChild>
               <Button>Выйти из аккунта</Button>
@@ -47,7 +62,17 @@ function CustomLink({
 }>) {
   const path = usePathname();
   return (
-    <li className={path === href ? "text-blue-500 font-bold" : ""}>
+    <li
+      className={
+        path ===
+        href.substring(
+          0,
+          href.indexOf("?") > 0 ? href.indexOf("?") : href.length
+        )
+          ? "text-blue-500 font-bold"
+          : ""
+      }
+    >
       <Link href={href} {...props}>
         {children}
       </Link>

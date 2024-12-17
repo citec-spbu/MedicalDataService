@@ -15,6 +15,7 @@ import { init as csToolsInit } from "@cornerstonejs/tools";
 import { init as dicomImageLoaderInit } from "@cornerstonejs/dicom-image-loader";
 import createImageIdsAndCacheMetaData from "@/lib/cornerstonejs/createImageIdsAndCacheMetaData";
 import { activeSeriesProps } from "../viewer";
+import { IVolumeViewport } from "@cornerstonejs/core/types";
 
 const volumeViewportId = "VOLUME_VIEWPORT";
 const stackViewportId = "STACK_VIEWPORT";
@@ -22,14 +23,15 @@ const stackViewportId = "STACK_VIEWPORT";
 const API = process.env.API;
 
 const volumeViewportInput = (
-  element: HTMLDivElement
+  element: HTMLDivElement,
+  axisType: Enums.OrientationAxis
 ): Types.PublicViewportInput => {
   return {
     viewportId: volumeViewportId,
     type: Enums.ViewportType.ORTHOGRAPHIC,
     element: element,
     defaultOptions: {
-      orientation: Enums.OrientationAxis.AXIAL
+      orientation: axisType
       //background: [0.2, 0, 0.2] as Types.Point3
     }
   };
@@ -65,15 +67,22 @@ export default function useViewport({
   >(null);
   const volumeRef = useRef<Types.IImageVolume | Types.IImage | null>(null);
   const isRunning = useRef<boolean>(false);
+  const axisType = useRef<Enums.OrientationAxis>(Enums.OrientationAxis.AXIAL);
   const [isLoaded, setIsLoaded] = useState<boolean>(false);
-
-  //const viewportRef = useRef<Types.IVolumeViewport | null>(null);
 
   useEffect(() => {
     if (!isRunning.current) {
       csInit();
       csToolsInit();
-      dicomImageLoaderInit({ maxWebWorkers: 3 });
+      dicomImageLoaderInit({
+        maxWebWorkers: 3,
+        beforeSend(xhr) {
+          xhr.setRequestHeader(
+            "Authorization",
+            `Bearer ${localStorage.getItem("accessToken")}`
+          );
+        }
+      });
 
       volumeLoader.registerUnknownVolumeLoader(
         // @ts-expect-error: According to official docs.
@@ -86,7 +95,11 @@ export default function useViewport({
     renderingEngineRef.current = getRenderingEngine(renderingEngineId);
     if (!renderingEngineRef.current)
       renderingEngineRef.current = new RenderingEngine(renderingEngineId);
-  }, []);
+
+    renderingEngineRef.current.enableElement(
+      volumeViewportInput(elementRef.current!, axisType.current)
+    );
+  }, [elementRef]);
 
   useEffect(() => {
     const handleResize = () => {
@@ -108,17 +121,18 @@ export default function useViewport({
           {
             StudyInstanceUID: activeSeries.StudyInstanceUID,
             SeriesInstanceUID: activeSeries.SeriesInstanceUID,
-            wadoRsRoot: API!
+            wadoRsRoot: `${API}/dicomweb`
           }
         );
 
+        const volumeId = activeSeries.SeriesInstanceUID;
         if (viewportType == "volume") {
-          const volumeId = activeSeries.SeriesInstanceUID;
-
-          renderingEngineRef.current?.disableElement(stackViewportId);
-          renderingEngineRef.current?.enableElement(
-            volumeViewportInput(elementRef.current!)
-          );
+          if (renderingEngineRef.current?.getStackViewports().length) {
+            renderingEngineRef.current?.disableElement(stackViewportId);
+            renderingEngineRef.current?.enableElement(
+              volumeViewportInput(elementRef.current!, axisType.current)
+            );
+          }
 
           viewportRef.current = renderingEngineRef.current?.getViewport(
             volumeViewportId
@@ -135,10 +149,17 @@ export default function useViewport({
 
           viewportRef.current.setVolumes([{ volumeId }]);
         } else if (viewportType == "stack") {
-          renderingEngineRef.current?.disableElement(volumeViewportId);
-          renderingEngineRef.current?.enableElement(
-            stackViewportInput(elementRef.current!)
-          );
+          if (renderingEngineRef.current?.getVolumeViewports().length) {
+            axisType.current = (
+              renderingEngineRef.current.getViewport(
+                volumeViewportId
+              ) as IVolumeViewport
+            ).viewportProperties.orientation!;
+            renderingEngineRef.current?.disableElement(volumeViewportId);
+            renderingEngineRef.current?.enableElement(
+              stackViewportInput(elementRef.current!)
+            );
+          }
 
           viewportRef.current = renderingEngineRef.current?.getViewport(
             stackViewportId

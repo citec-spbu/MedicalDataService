@@ -91,8 +91,9 @@ const ViewerTools = ({ viewport, isLoaded }: ToolsProps) => {
   }, [isLoaded, viewport]);
 
   useEffect(() => {
-    if (viewport?.type == Enums.ViewportType.ORTHOGRAPHIC)
+    if (viewport?.type == Enums.ViewportType.ORTHOGRAPHIC) {
       (viewport as IVolumeViewport)?.setOrientation(axisType);
+    }
   }, [axisType, viewport]);
 
   useEffect(() => {

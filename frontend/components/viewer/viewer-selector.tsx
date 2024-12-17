@@ -1,10 +1,12 @@
-import { memo, useEffect, useState } from "react";
+import { cache, memo, useEffect, useState } from "react";
 import { Card } from "../ui/card";
 import { Tabs, TabsList, TabsTrigger } from "../ui/tabs";
 import { ScrollArea } from "../ui/scroll-area";
 import { useSearchParams } from "next/navigation";
 import { activeSeriesProps } from "./viewer";
 import { CubeIcon } from "@radix-ui/react-icons";
+import Image from "next/image";
+import api from "@/lib/api";
 
 const API = process.env.API;
 interface SelectorProps {
@@ -12,7 +14,7 @@ interface SelectorProps {
   setActiveSeries: (series: activeSeriesProps) => void;
 }
 
-interface seriesProps {
+interface SeriesProps {
   StudyInstanceUID: string;
   SeriesInstanceUID: string;
   description: string;
@@ -26,19 +28,19 @@ const ViewerSelector = ({ activeSeries, setActiveSeries }: SelectorProps) => {
   const studyUID = searchParams.get("StudyUID");
   const seriesUID = searchParams.get("SeriesUID");
 
-  const [series, setSeries] = useState<seriesProps[]>([]);
+  const [series, setSeries] = useState<SeriesProps[]>([]);
 
   useEffect(() => {
-    const fetchData = async () => {
-      const response = await fetch(`${API}/studies/${studyUID}/series`);
-      if (response.ok) {
-        const data = await response.json();
+    const fetchData = cache(async () => {
+      const response = await api.get(`/dicomweb/studies/${studyUID}/series`);
+      if (response.status === 200) {
+        const data = await response.data;
         const seriesData = data.map((series) => ({
           StudyInstanceUID: series["0020000D"]?.["Value"]?.[0],
           SeriesInstanceUID: series["0020000E"]?.["Value"]?.[0],
           description: series["0008103E"]?.["Value"]?.[0],
           modality: series["00080060"]?.["Value"]?.[0],
-          instancesCount: series["00201209"]?.["Value"]?.[0],
+          instancesCount: series["00201209"]?.["Value"]?.[0]
         }));
         setSeries(seriesData);
         setActiveSeries({
@@ -46,7 +48,7 @@ const ViewerSelector = ({ activeSeries, setActiveSeries }: SelectorProps) => {
           SeriesInstanceUID: seriesUID!
         });
       }
-    };
+    });
     fetchData();
   }, [studyUID, seriesUID, setActiveSeries]);
 
@@ -74,13 +76,15 @@ const ViewerSelector = ({ activeSeries, setActiveSeries }: SelectorProps) => {
               >
                 <div className="flex flex-col max-w-[224px]">
                   <Card className="w-[224px] h-[126px] relative">
-                    <img
-                      src={`${API}/studies/${item.StudyInstanceUID}/series/${item.SeriesInstanceUID}/preview`}
+                    <Image
+                      src={`${API}/dicomweb/studies/${item.StudyInstanceUID}/series/${item.SeriesInstanceUID}/preview`}
                       alt={item.description}
+                      width={300}
+                      height={168}
                       className="w-full h-full object-contain"
                       loading="lazy"
                       onError={(e) => {
-                        e.currentTarget.style.display = 'none';
+                        e.currentTarget.style.display = "none";
                       }}
                     />
                     <div className="absolute top-2 left-2 bg-black/50 px-2 py-1 rounded text-white">

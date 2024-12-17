@@ -14,6 +14,8 @@ faststream[rabbit]==0.5.28          # RabbitMQ message broker
 aiofiles==24.1.0                    # Handling local disk files in asyncio applications
 pydicom==3.0.1                      # For working with DICOM files
 pyjpegls==1.5.1                     # For encoding DICOM into JPEG-LS format
+pillow==11.0.0                      # Image library
+pillow_jpls==1.3.2                  # A JPEG-LS plugin for the Pillow imaging library
 aio-pika==9.5.0                     # Asynchronous support for RabbitMQ
 httpx==0.27.2                       # Asynchronous HTTP client for Python
 httpcore==1.0.7                     # The core transport layer for HTTPX

@@ -3,6 +3,7 @@ import "./globals.css";
 import { ThemeProvider } from "@/components/themes/theme-provider";
 
 import { cn } from "@/lib/utils";
+import { UserProvider } from "@/providers/user-provider";
 
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
@@ -32,9 +33,11 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <div className="relative flex min-h-screen flex-col bg-background">
-            <main className="flex-1">{children}</main>
-          </div>
+          <UserProvider>
+            <div className="relative flex min-h-screen flex-col bg-background">
+              <main className="flex-1">{children}</main>
+            </div>
+          </UserProvider>
         </ThemeProvider>
       </body>
     </html>

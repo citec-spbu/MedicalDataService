@@ -166,6 +166,11 @@ export const DataTable = () => {
                       router.push(
                         `/viewer?StudyUID=${study_uid}&SeriesUID=${row.original["uid"]}`
                       );
+
+                      localStorage.setItem(
+                        "viewerQueryParams",
+                        `?StudyUID=${study_uid}&SeriesUID=${row.original["uid"]}`
+                      );
                     }
                   }}
                 >

@@ -1,5 +1,7 @@
 import { api } from "dicomweb-client";
 import cornerstoneDICOMImageLoader from "@cornerstonejs/dicom-image-loader";
+import { refreshAccessToken } from "../api";
+import { redirect } from "next/navigation";
 
 /**
 /**
@@ -37,9 +39,17 @@ export default async function createImageIdsAndCacheMetaData({
     seriesInstanceUID: SeriesInstanceUID
   };
 
+  try {
+    await refreshAccessToken();
+  } catch {
+    localStorage.removeItem("accessToken");
+    redirect("/auth/login");
+  }
+
   const client = new api.DICOMwebClient({
-    url: wadoRsRoot as string,
-    singlepart: false
+    url: wadoRsRoot,
+    singlepart: false,
+    headers: { Authorization: `Bearer ${localStorage.getItem("accessToken")}` }
   });
 
   const instances = await client.retrieveSeriesMetadata(studySearchOptions);

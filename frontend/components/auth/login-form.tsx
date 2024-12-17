@@ -2,7 +2,7 @@
 
 import * as z from "zod";
 
-import { startTransition, useActionState, useRef } from "react";
+import { startTransition, useActionState, useEffect, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
@@ -21,12 +21,21 @@ import { Button } from "@/components/ui/button";
 import { FormError } from "@/components/form-error";
 
 import { login } from "@/actions/login";
+import { useRouter } from "next/navigation";
 
 export const LoginForm = () => {
+  const router = useRouter();
   const [state, loginAction, isPending] = useActionState(login, {
     message: "",
     fields: {}
   });
+
+  useEffect(() => {
+    if (state.message === "success") {
+      localStorage.setItem("accessToken", state.fields!.accessToken);
+      router.push("/browser");
+    }
+  }, [state, router]);
 
   const form = useForm<z.infer<typeof LoginSchemas>>({
     resolver: zodResolver(LoginSchemas),
@@ -86,7 +95,9 @@ export const LoginForm = () => {
               )}
             ></FormField>
 
-            <FormError message={state?.message} />
+            {state?.message !== "success" && (
+              <FormError message={state?.message} />
+            )}
             <Button
               disabled={isPending}
               variant="default"

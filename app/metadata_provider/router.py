@@ -229,7 +229,7 @@ async def create_preview(pixel_data: bytes, metadata: Optional[dict] = None) -> 
     background.paste(preview_image, (x, y))
 
     preview_buffer = io.BytesIO()
-    background.save(preview_buffer, format='PNG')
+    background.save(preview_buffer, format='WEBP')
     preview_buffer.seek(0)
 
     return preview_buffer.getvalue()

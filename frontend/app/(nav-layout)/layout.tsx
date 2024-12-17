@@ -2,13 +2,16 @@
 
 import ReduxProvider from "@/providers/redux-provider";
 import { Navbar } from "@/components/navbar/navbar";
+import { Suspense } from "react";
 
 const NavLayout = ({ children }: { children: React.ReactNode }) => {
   return (
-    <ReduxProvider>
-      <Navbar />
-      {children}
-    </ReduxProvider>
+    <Suspense>
+      <ReduxProvider>
+        <Navbar />
+        {children}
+      </ReduxProvider>
+    </Suspense>
   );
 };
 
