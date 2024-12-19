@@ -17,6 +17,9 @@ export async function middleware(request: NextRequest) {
   if (isPublicRoute && token) {
     return NextResponse.redirect(new URL("/", request.nextUrl));
   }
-
   return NextResponse.next();
 }
+
+export const config = {
+  matcher: ["/auth/:path*", "/viewer/:path*", "/browser/:path*"]
+};

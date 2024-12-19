@@ -29,7 +29,6 @@ export default function useTableData(
         const response = (
           await api.get(`/dicomweb/patients?show_personal_data=${anonimized}`)
         ).data;
-        console.log(response);
 
         setTableData({
           data: response.map((patient) => {

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { HomeIcon } from "lucide-react";
-import { redirect, usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { ModeToggle } from "@/components/themes/theme-button";
 import {
   DropdownMenu,
@@ -17,6 +17,7 @@ import { Upload } from "./upload";
 import { logout } from "@/actions/logout";
 
 export const Navbar = () => {
+  const router = useRouter();
   const pathname = usePathname();
   const [viewerQueryParams, setViewerQueryParams] = useState<string | null>(
     null
@@ -50,12 +51,12 @@ export const Navbar = () => {
           <DropdownMenuContent>
             <DropdownMenuItem asChild>
               <Button
-                onClick={() => {
-                  logout();
+                onClick={async () => {
                   localStorage.removeItem("accessToken");
                   localStorage.removeItem("name");
                   localStorage.removeItem("role");
-                  redirect("/auth/login");
+                  await logout();
+                  router.push("/auth/login");
                 }}
               >
                 Выйти из аккунта

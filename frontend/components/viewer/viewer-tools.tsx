@@ -140,6 +140,7 @@ const ViewerTools = ({ viewport, isLoaded }: ToolsProps) => {
           <ToolsButton
             caption="Сброс"
             onClick={() => {
+              viewport?.resetCamera();
               viewport?.resetProperties();
               viewport?.render();
             }}
