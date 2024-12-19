@@ -3,13 +3,12 @@
 import { LoginSchemas } from "@/schemas";
 import axios, { AxiosError } from "axios";
 import { cookies } from "next/headers";
-import { redirect } from "next/navigation";
 
 type ResponseData = {
   detail: string;
 };
 
-export type FormState = {
+type FormState = {
   message: string;
   fields?: Record<string, string>;
 };
@@ -26,7 +25,6 @@ export const login = async (
       nickname: formData.login,
       password: formData.password
     });
-    console.log(response.headers["set-cookie"]);
     (await cookies()).set(
       "refresh_token",
       response.headers["set-cookie"]![0].slice(
@@ -54,6 +52,4 @@ export const login = async (
     }
     return response;
   }
-
-  redirect("/browser");
 };

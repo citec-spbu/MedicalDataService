@@ -20,7 +20,7 @@ import {
   AccordionTrigger
 } from "../ui/accordion";
 
-export const Cart = () => {
+export const Download = () => {
   const [totalQuantity, setTotalQuantity] = useState(0);
 
   const store = useCartSelector((store) => store.cart.items);

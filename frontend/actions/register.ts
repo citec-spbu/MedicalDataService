@@ -8,7 +8,7 @@ type ResponseData = {
   detail: string;
 };
 
-export type FormState = {
+type FormState = {
   message: string;
   fields?: Record<string, string>;
 };

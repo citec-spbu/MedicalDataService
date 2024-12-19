@@ -82,7 +82,7 @@ const ViewerSelector = ({ activeSeries, setActiveSeries }: SelectorProps) => {
                       width={300}
                       height={168}
                       className="w-full h-full object-contain"
-                      loading="lazy"
+                      loading="eager"
                       onError={(e) => {
                         e.currentTarget.style.display = "none";
                       }}

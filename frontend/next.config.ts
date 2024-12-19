@@ -20,6 +20,11 @@ const nextConfig: NextConfig = {
       }
     ]
   },
+  experimental: {
+    serverActions: {
+      bodySizeLimit: "10gb"
+    }
+  },
   webpack: (config) => {
     // resolve fs for one of the dependencies
     config.resolve.fallback = {

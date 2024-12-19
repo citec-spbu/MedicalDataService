@@ -11,7 +11,8 @@ interface TableData {
 
 export default function useTableData(
   patient_id: string | null,
-  study_uid: string | null
+  study_uid: string | null,
+  anonimized: boolean
 ) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
@@ -25,7 +26,10 @@ export default function useTableData(
   useEffect(() => {
     const fetchData = cache(async () => {
       if (!patient_id) {
-        const response = (await api.get(`/dicomweb/patients`)).data;
+        const response = (
+          await api.get(`/dicomweb/patients?show_personal_data=${anonimized}`)
+        ).data;
+        console.log(response);
 
         setTableData({
           data: response.map((patient) => {
@@ -93,7 +97,7 @@ export default function useTableData(
     fetchData();
     setSorting([]);
     setColumnFilters([]);
-  }, [patient_id, study_uid]);
+  }, [patient_id, study_uid, anonimized]);
 
   return {
     tableData,

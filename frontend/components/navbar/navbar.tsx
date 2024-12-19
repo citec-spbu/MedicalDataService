@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { HomeIcon } from "lucide-react";
-import { usePathname } from "next/navigation";
+import { redirect, usePathname } from "next/navigation";
 import { ModeToggle } from "@/components/themes/theme-button";
 import {
   DropdownMenu,
@@ -11,16 +11,24 @@ import {
   DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { Cart } from "./cart";
+import { Download } from "./download";
 import { useEffect, useState } from "react";
-import { useUserContext } from "@/providers/user-provider";
+import { Upload } from "./upload";
+import { logout } from "@/actions/logout";
 
 export const Navbar = () => {
   const pathname = usePathname();
   const [viewerQueryParams, setViewerQueryParams] = useState<string | null>(
     null
   );
-  const user = useUserContext();
+  const [userName, setUserName] = useState("");
+
+  useEffect(() => {
+    const storedUserName = localStorage.getItem("name");
+    if (storedUserName) {
+      setUserName(storedUserName);
+    }
+  }, []);
 
   useEffect(() => {
     if (window !== undefined) {
@@ -38,15 +46,26 @@ export const Navbar = () => {
           Просмотр файлов
         </CustomLink>
         <DropdownMenu>
-          <DropdownMenuTrigger>{user.name}</DropdownMenuTrigger>
+          <DropdownMenuTrigger>{userName}</DropdownMenuTrigger>
           <DropdownMenuContent>
             <DropdownMenuItem asChild>
-              <Button>Выйти из аккунта</Button>
+              <Button
+                onClick={() => {
+                  logout();
+                  localStorage.removeItem("accessToken");
+                  localStorage.removeItem("name");
+                  localStorage.removeItem("role");
+                  redirect("/auth/login");
+                }}
+              >
+                Выйти из аккунта
+              </Button>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
         <ModeToggle />
-        <Cart />
+        <Upload />
+        <Download />
       </ul>
     </nav>
   );

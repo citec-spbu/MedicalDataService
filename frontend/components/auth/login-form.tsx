@@ -22,6 +22,7 @@ import { FormError } from "@/components/form-error";
 
 import { login } from "@/actions/login";
 import { useRouter } from "next/navigation";
+import api from "@/lib/api";
 
 export const LoginForm = () => {
   const router = useRouter();
@@ -33,6 +34,14 @@ export const LoginForm = () => {
   useEffect(() => {
     if (state.message === "success") {
       localStorage.setItem("accessToken", state.fields!.accessToken);
+
+      const fetchUser = async () => {
+        const authorizeResponse = (await api.get("/user/me")).data;
+        localStorage.setItem("name", authorizeResponse.nickname);
+        localStorage.setItem("role", authorizeResponse.role);
+      };
+      fetchUser();
+
       router.push("/browser");
     }
   }, [state, router]);
@@ -61,7 +70,7 @@ export const LoginForm = () => {
           onSubmit={(e) => {
             e.preventDefault();
             form.handleSubmit(() => {
-              startTransition(() => {
+              startTransition(async () => {
                 loginAction(new FormData(formRef.current!));
               });
             })(e);

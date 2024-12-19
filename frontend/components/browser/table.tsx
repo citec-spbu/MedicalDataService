@@ -32,6 +32,9 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useCartDispatch } from "@/stores";
 import { addToCart, removeFromCart } from "@/stores/cart";
+import { Checkbox } from "../ui/checkbox";
+import { Label } from "../ui/label";
+import { useState } from "react";
 
 export const DataTable = () => {
   const searchParams = useSearchParams();
@@ -41,6 +44,7 @@ export const DataTable = () => {
 
   const patient_id = searchParams.get("PatientID");
   const study_uid = searchParams.get("StudyUID");
+  const [anonimized, setAnonimized] = useState(false);
 
   const {
     tableData,
@@ -50,7 +54,7 @@ export const DataTable = () => {
     setColumnFilters,
     rowSelection,
     setRowSelection
-  } = useTableData(patient_id, study_uid);
+  } = useTableData(patient_id, study_uid, anonimized);
 
   const activeTabMapper = {
     patient: patientColumns,
@@ -113,14 +117,27 @@ export const DataTable = () => {
       </Breadcrumb>
       <div className="flex items-center justify-start py-4">
         {tableData?.activeTab === "patient" && (
-          <Input
-            placeholder="Поиск по фамилии"
-            value={(table.getColumn("name")?.getFilterValue() as string) ?? ""}
-            onChange={(event) =>
-              table.getColumn("name")?.setFilterValue(event.target.value)
-            }
-            className="max-w-sm"
-          />
+          <>
+            <Input
+              placeholder="Поиск по фамилии"
+              value={
+                (table.getColumn("name")?.getFilterValue() as string) ?? ""
+              }
+              onChange={(event) =>
+                table.getColumn("name")?.setFilterValue(event.target.value)
+              }
+              className="max-w-sm"
+            />
+            <div className="grid grid-cols-2 gap-4 px-4">
+              <Label>Показать имена</Label>
+              <Checkbox
+                checked={anonimized}
+                onCheckedChange={() => {
+                  setAnonimized(!anonimized);
+                }}
+              />
+            </div>
+          </>
         )}
       </div>
       <div className="rounded-md border">
