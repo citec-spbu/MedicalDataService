@@ -17,6 +17,7 @@ import io
 import zipfile
 import os
 import pydicom
+import shutil
 
 router = APIRouter(prefix="/download", tags=["Download"])
 
@@ -122,7 +123,11 @@ async def download_studies_archive(
                         )
 
                         # Сохраняем обновлённый файл локально
+                        file_name = file_name.replace("/", os.sep).replace("\\", os.sep)
                         output_path = os.path.join(temp_dir, file_name)
+
+                        # Создаём директории, если их нет
+                        os.makedirs(os.path.dirname(output_path), exist_ok=True)
                         with open(output_path, "wb") as f:
                             f.write(updated_dicom.read())
 
@@ -135,11 +140,15 @@ async def download_studies_archive(
 
             output_archive_buffer.seek(0)
 
-            # Удаляем временные файлы
-            for root, _, files in os.walk(temp_dir):
-                for file in files:
-                    os.remove(os.path.join(root, file))
-            os.rmdir(temp_dir)
+            # Удаляем временные файлы и директорию
+            if os.path.exists(temp_dir):
+                try:
+                    shutil.rmtree(temp_dir)
+                except Exception as e:
+                    raise HTTPException(
+                        status_code=500,
+                        detail=f"Failed to remove temp directory: {str(e)}"
+                    )
 
             # Возвращаем архив пользователю
             return StreamingResponse(
