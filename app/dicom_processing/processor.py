@@ -81,7 +81,7 @@ class DicomProcessor:
             return [value]
 
     @staticmethod
-    async def process_dicom_file(ds: pydicom.dataset.FileDataset, dicom_file_id: int):
+    async def process_dicom_file(ds: pydicom.dataset.FileDataset, dicom_file_id: int, dicom_file_name: str):
         try:
             # Обработка Patient
             patient_data = {
@@ -178,6 +178,7 @@ class DicomProcessor:
                 "sop_instance_uid": ds.SOPInstanceUID,
                 "series_id": series.id,
                 "dicom_file_id": dicom_file_id,
+                "dicom_file_name": dicom_file_name,  # Добавляем имя файла
                 "check_sum": DicomProcessor.calculate_checksum(pixel_data) if pixel_data else None,
                 "metadata_": json_metadata,
                 "pixel_data_path": pixel_data_path
@@ -224,7 +225,7 @@ async def process_archive(query: IndexQuery, logger: Logger):
                         ds.compress(JPEGLSLossless)
 
                         # Обрабатываем файл
-                        await DicomProcessor.process_dicom_file(ds, dicom_file.id)
+                        await DicomProcessor.process_dicom_file(ds, dicom_file.id, dicom_file_name=file.filename)
                         logger.info(f"Successfully processed file: {file.filename}")
                     except Exception as e:
                         logger.error(f"Error processing file {file.filename}: {str(e)}")

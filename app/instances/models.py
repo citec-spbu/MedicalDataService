@@ -14,6 +14,7 @@ class Instance(Base):
     sop_instance_uid: Mapped[str_uniq] = mapped_column(String(64))
     series_id: Mapped[int] = mapped_column(ForeignKey("series.id"))
     dicom_file_id: Mapped[int] = mapped_column(ForeignKey("dicom_files.id"))
+    dicom_file_name: Mapped[int] = mapped_column(String(64))
     check_sum: Mapped[str_not_null] = mapped_column(String(64))
     metadata_: Mapped[dict] = mapped_column(JSONB)
     pixel_data_path: Mapped[str_not_null] = mapped_column(String(512))

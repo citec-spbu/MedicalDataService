@@ -12,6 +12,13 @@ from sqlalchemy.exc import SQLAlchemyError
 class BaseDAO:
     model = None
 
+    @staticmethod
+    def get_session():
+        """
+        Returns an async session as a context manager.
+        """
+        return async_session_maker()
+
     @classmethod
     async def find_all(cls, **filter_by):
         """

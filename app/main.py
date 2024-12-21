@@ -2,6 +2,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from app.users.router import router as users_router
 from app.upload.router import router as upload_router
+from app.download.router import router as download_router
 from app.dicom_processing.processor import router as processor_router
 from app.metadata_provider.router import router as metadata_router
 from app.edit.router import router as edit_router
@@ -47,6 +48,7 @@ def home_page():
 
 app.include_router(users_router)
 app.include_router(upload_router)
+app.include_router(download_router)
 app.include_router(processor_router)
 app.include_router(metadata_router)
 app.include_router(edit_router)
