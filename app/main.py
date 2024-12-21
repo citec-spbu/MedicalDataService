@@ -1,7 +1,5 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-
-from app.download.router import download_studies_archive
 from app.users.router import router as users_router
 from app.upload.router import router as upload_router
 from app.download.router import router as download_router

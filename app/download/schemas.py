@@ -1,5 +1,5 @@
 from pydantic import BaseModel
 from typing import List
 
-class DownloadStudiesRequest(BaseModel):
-    study_ids: List[int]
+class DownloadSeriesRequest(BaseModel):
+    series_ids: List[int]
