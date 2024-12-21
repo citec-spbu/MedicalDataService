@@ -35,6 +35,7 @@ import { addToCart, removeFromCart } from "@/stores/cart";
 import { Checkbox } from "../ui/checkbox";
 import { Label } from "../ui/label";
 import { useState } from "react";
+import { useUserContext } from "@/providers/user-provider";
 
 export const DataTable = () => {
   const searchParams = useSearchParams();
@@ -45,6 +46,7 @@ export const DataTable = () => {
   const patient_id = searchParams.get("PatientID");
   const study_uid = searchParams.get("StudyUID");
   const [anonimized, setAnonimized] = useState(false);
+  const user = useUserContext();
 
   const {
     tableData,
@@ -53,7 +55,8 @@ export const DataTable = () => {
     columnFilters,
     setColumnFilters,
     rowSelection,
-    setRowSelection
+    setRowSelection,
+    isLoading
   } = useTableData(patient_id, study_uid, anonimized);
 
   const activeTabMapper = {
@@ -128,15 +131,17 @@ export const DataTable = () => {
               }
               className="max-w-sm"
             />
-            <div className="grid grid-cols-2 gap-4 px-4">
-              <Label>Показать имена</Label>
-              <Checkbox
-                checked={anonimized}
-                onCheckedChange={() => {
-                  setAnonimized(!anonimized);
-                }}
-              />
-            </div>
+            {user && user?.role !== "UPLOADER" && user.role !== "TECHNICAL" && (
+              <div className="grid grid-cols-2 gap-4 px-4">
+                <Label>Показать имена</Label>
+                <Checkbox
+                  checked={anonimized}
+                  onCheckedChange={() => {
+                    setAnonimized(!anonimized);
+                  }}
+                />
+              </div>
+            )}
           </>
         )}
       </div>
@@ -204,10 +209,10 @@ export const DataTable = () => {
             ) : (
               <TableRow>
                 <TableCell
-                  colSpan={patientColumns.length}
+                  colSpan={table.getAllColumns().length}
                   className="h-24 text-center"
                 >
-                  No results.
+                  {isLoading ? "Загрузка" : " Нет результатов"}
                 </TableCell>
               </TableRow>
             )}

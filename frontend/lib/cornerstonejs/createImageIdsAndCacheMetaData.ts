@@ -52,7 +52,12 @@ export default async function createImageIdsAndCacheMetaData({
     headers: { Authorization: `Bearer ${localStorage.getItem("accessToken")}` }
   });
 
-  const instances = await client.retrieveSeriesMetadata(studySearchOptions);
+  let instances;
+  try {
+    instances = await client.retrieveSeriesMetadata(studySearchOptions);
+  } catch {
+    redirect("/studynotfound");
+  }
   let viewportType: "volume" | "stack" = "volume";
   const imageIds = instances.map((instanceMetaData) => {
     const SeriesInstanceUID = instanceMetaData[SERIES_INSTANCE_UID]?.Value![0];

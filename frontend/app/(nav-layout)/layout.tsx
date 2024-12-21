@@ -3,13 +3,16 @@
 import ReduxProvider from "@/providers/redux-provider";
 import { Navbar } from "@/components/navbar/navbar";
 import { Suspense } from "react";
+import { UserProvider } from "@/providers/user-provider";
 
 const NavLayout = ({ children }: { children: React.ReactNode }) => {
   return (
     <Suspense>
       <ReduxProvider>
-        <Navbar />
-        {children}
+        <UserProvider>
+          <Navbar />
+          {children}
+        </UserProvider>
       </ReduxProvider>
     </Suspense>
   );

@@ -1,12 +1,13 @@
-import { cache, memo, useEffect, useState } from "react";
+import { memo, useEffect, useState } from "react";
 import { Card } from "../ui/card";
 import { Tabs, TabsList, TabsTrigger } from "../ui/tabs";
 import { ScrollArea } from "../ui/scroll-area";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { activeSeriesProps } from "./viewer";
 import { CubeIcon } from "@radix-ui/react-icons";
 import Image from "next/image";
 import api from "@/lib/api";
+import useApiCall from "@/lib/hooks/useApiCall";
 
 const API = process.env.API;
 interface SelectorProps {
@@ -24,18 +25,22 @@ interface SeriesProps {
 
 const ViewerSelector = ({ activeSeries, setActiveSeries }: SelectorProps) => {
   const searchParams = useSearchParams();
+  const router = useRouter();
 
   const studyUID = searchParams.get("StudyUID");
   const seriesUID = searchParams.get("SeriesUID");
 
   const [series, setSeries] = useState<SeriesProps[]>([]);
 
+  const getData = useApiCall<any[]>(api.get);
+
   useEffect(() => {
-    const fetchData = cache(async () => {
-      const response = await api.get(`/dicomweb/studies/${studyUID}/series`);
-      if (response.status === 200) {
-        const data = await response.data;
-        const seriesData = data.map((series) => ({
+    const fetchData = async () => {
+      try {
+        const response = (await getData(`/dicomweb/studies/${studyUID}/series`))
+          .data;
+
+        const seriesData = response.map((series) => ({
           StudyInstanceUID: series["0020000D"]?.["Value"]?.[0],
           SeriesInstanceUID: series["0020000E"]?.["Value"]?.[0],
           description: series["0008103E"]?.["Value"]?.[0],
@@ -47,10 +52,12 @@ const ViewerSelector = ({ activeSeries, setActiveSeries }: SelectorProps) => {
           StudyInstanceUID: studyUID!,
           SeriesInstanceUID: seriesUID!
         });
+      } catch {
+        router.push("/studynotfound");
       }
-    });
+    };
     fetchData();
-  }, [studyUID, seriesUID, setActiveSeries]);
+  }, [studyUID, seriesUID, setActiveSeries, router, getData]);
 
   return (
     <Card className="h-full w-[300px]">

@@ -10,26 +10,20 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
-import { Button } from "@/components/ui/button";
 import { Download } from "./download";
 import { useEffect, useState } from "react";
 import { Upload } from "./upload";
 import { logout } from "@/actions/logout";
+import { useUserContext } from "@/providers/user-provider";
 
 export const Navbar = () => {
-  const router = useRouter();
   const pathname = usePathname();
+  const router = useRouter();
   const [viewerQueryParams, setViewerQueryParams] = useState<string | null>(
     null
   );
-  const [userName, setUserName] = useState("");
 
-  useEffect(() => {
-    const storedUserName = localStorage.getItem("name");
-    if (storedUserName) {
-      setUserName(storedUserName);
-    }
-  }, []);
+  const user = useUserContext();
 
   useEffect(() => {
     if (window !== undefined) {
@@ -42,31 +36,31 @@ export const Navbar = () => {
         <CustomLink href="/">
           <HomeIcon />
         </CustomLink>
-        <CustomLink href="/browser">Проводник</CustomLink>
-        <CustomLink href={`/viewer${viewerQueryParams ?? ""}`}>
-          Просмотр файлов
-        </CustomLink>
+        {user && user.role !== "UPLOADER" && (
+          <CustomLink href="/browser">Проводник</CustomLink>
+        )}
+        {((user && user.role === "ADMIN") || user?.role === "MODERATOR") && (
+          <CustomLink href={`/viewer${viewerQueryParams ?? ""}`}>
+            Просмотр файлов
+          </CustomLink>
+        )}
         <DropdownMenu>
-          <DropdownMenuTrigger>{userName}</DropdownMenuTrigger>
+          <DropdownMenuTrigger>{user?.name}</DropdownMenuTrigger>
           <DropdownMenuContent>
-            <DropdownMenuItem asChild>
-              <Button
-                onClick={async () => {
-                  localStorage.removeItem("accessToken");
-                  localStorage.removeItem("name");
-                  localStorage.removeItem("role");
-                  await logout();
-                  router.push("/auth/login");
-                }}
-              >
-                Выйти из аккунта
-              </Button>
+            <DropdownMenuItem
+              onClick={async () => {
+                localStorage.removeItem("accessToken");
+                await logout();
+                router.push("/auth/login");
+              }}
+            >
+              Выйти из аккунта
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
         <ModeToggle />
-        <Upload />
-        <Download />
+        {user && user.role !== "TECHNICAL" && <Upload />}
+        {user && user.role !== "UPLOADER" && <Download />}
       </ul>
     </nav>
   );

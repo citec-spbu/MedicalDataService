@@ -1,32 +1,61 @@
 "use client";
 
-import { createContext, ReactNode, useContext, useMemo, useState } from "react";
+import { jwtDecode, JwtPayload } from "jwt-decode";
+import {
+  createContext,
+  ReactNode,
+  useContext,
+  useEffect,
+  useState
+} from "react";
 
-interface User {
+export type UserRole = "ADMIN" | "MODERATOR" | "UPLOADER" | "TECHNICAL";
+
+export interface User {
   name: string;
-  role: string;
+  role: UserRole;
 }
 
-interface UserContextType {
-  user: User | null;
-  setUser: (user: User | null) => void;
-}
+export const UserContext = createContext<User | null>(null);
 
-export const UserContext = createContext<UserContextType | null>(null);
-
-export const UserProvider = ({
-  children
-}: Readonly<{ children: ReactNode }>) => {
+export const UserProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
-  const obj = useMemo(() => ({ user: user, setUser: setUser }), [user]);
 
-  return <UserContext.Provider value={obj}>{children}</UserContext.Provider>;
+  useEffect(() => {
+    const tokenFromLocalStorage = localStorage.getItem("accessToken");
+    if (tokenFromLocalStorage) {
+      const decodedToken = jwtDecode<JwtPayload & { role: UserRole }>(
+        tokenFromLocalStorage
+      );
+      setUser({ name: decodedToken.sub!, role: decodedToken.role });
+    }
+  }, []);
+
+  useEffect(() => {
+    const handleStorageEvent = (e: StorageEvent) => {
+      console.log(e.key);
+      if (e.key == "accessToken") {
+        const token = localStorage.getItem("accessToken");
+        if (token) {
+          const decodedToken = jwtDecode<JwtPayload & { role: UserRole }>(
+            token
+          );
+          setUser({ name: decodedToken.sub!, role: decodedToken.role });
+        } else {
+          setUser(null);
+        }
+      }
+    };
+
+    window.addEventListener("storage", handleStorageEvent);
+    return () => {
+      window.removeEventListener("storage", handleStorageEvent);
+    };
+  }, []);
+
+  return <UserContext.Provider value={user}>{children}</UserContext.Provider>;
 };
 
-export const useUserContext = (): UserContextType => {
-  const context = useContext(UserContext);
-  if (context === null) {
-    throw new Error("useUserContext must be used within a UserProvider");
-  }
-  return context;
+export const useUserContext = (): User | null => {
+  return useContext(UserContext);
 };

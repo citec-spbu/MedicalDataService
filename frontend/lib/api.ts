@@ -1,8 +1,8 @@
 "use client";
 
+import { logout } from "@/actions/logout";
 import axios from "axios";
 import { jwtDecode } from "jwt-decode";
-import { redirect } from "next/navigation";
 
 const api = axios.create({
   baseURL: process.env.API,
@@ -42,7 +42,8 @@ api.interceptors.request.use(async (config) => {
     return config;
   } catch {
     localStorage.removeItem("accessToken");
-    redirect("/auth/login");
+    await logout();
+    throw new Error("Unauthorized");
   }
 });
 

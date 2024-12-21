@@ -15,6 +15,7 @@ import api from "@/lib/api";
 import { AxiosError } from "axios";
 import { FormSuccess } from "../form-success";
 import { FormError } from "../form-error";
+import useApiCall from "@/lib/hooks/useApiCall";
 
 type UploadStatus = {
   type: "idle" | "uploading" | "success" | "error";
@@ -27,6 +28,7 @@ export const Upload = () => {
     type: "idle"
   });
   const [uploadProgress, setUploadProgress] = useState(0);
+  const postData = useApiCall<{ message: string }>(api.post);
 
   function handleFileChange(e: ChangeEvent<HTMLInputElement>) {
     if (e.target.files) {
@@ -44,11 +46,11 @@ export const Upload = () => {
     formData.append("file", file);
 
     try {
-      await api.post("/upload/", formData, {
+      await postData("/upload/", formData, {
         headers: {
           "Content-Type": "multipart/form-data"
         },
-        onUploadProgress: (progressEvent) => {
+        onUploadProgress: (progressEvent: ProgressEvent) => {
           const progress = progressEvent.total
             ? Math.round((progressEvent.loaded * 100) / progressEvent.total)
             : 0;
