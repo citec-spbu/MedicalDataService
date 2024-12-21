@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, status
-from fastapi.responses import StreamingResponse
+from fastapi.responses import Response, StreamingResponse, FileResponse
 from sqlalchemy import select
 from contextlib import asynccontextmanager
 from app.dao.base import BaseDAO
@@ -12,16 +12,19 @@ from app.config import get_minio_client, minio_settings
 from app.users.jwt.current_user import get_current_user_from_access
 from app.users.schemas import SUserWithRole
 from app.users.models import UserRole
-from app.download.schemas import DownloadStudiesRequest
+from app.download.schemas import DownloadSeriesRequest
 import io
 import zipfile
 import os
 import pydicom
 import shutil
+import logging
 
 router = APIRouter(prefix="/download", tags=["Download"])
 
 MINIO_BUCKET = minio_settings.MINIO_BUCKET
+
+logger = logging.getLogger(__name__)
 
 
 # Функция для обновления метаданных DICOM
@@ -37,12 +40,12 @@ def update_dicom_metadata(dicom_bytes, new_name, new_birth_date):
 
 @router.post("/")
 async def download_studies_archive(
-        request: DownloadStudiesRequest,
+        request: DownloadSeriesRequest,
         user_data: SUserWithRole = Depends(get_current_user_from_access)
 ):
     # Проверка входящих данных
-    study_ids = request.study_ids
-    if not study_ids:
+    series_uids = request.series_uids
+    if not series_uids:
         raise HTTPException(
             status_code=400,
             detail="Study IDs must be provided"
@@ -67,8 +70,7 @@ async def download_studies_archive(
                 join(Series, Instance.series_id == Series.id). \
                 join(Study, Series.study_id == Study.id). \
                 join(Patient, Study.patient_id == Patient.id). \
-                where(Study.id.in_(study_ids))
-
+                where(Series.instance_uid.in_(series_uids))
             result = await session.execute(query)
             records = result.fetchall()
 
@@ -94,8 +96,10 @@ async def download_studies_archive(
             for archive_path, files_info in archives_dict.items():
                 # Загружаем архив из MinIO
                 try:
+                    logger.info("Attempting to load archive from minio")
                     minio_response = minio_client.get_object(MINIO_BUCKET, archive_path)
                     archive_bytes = io.BytesIO(minio_response.read())
+                    logger.info("Archive Loaded")
                 except Exception as e:
                     raise HTTPException(
                         status_code=500,
@@ -105,7 +109,9 @@ async def download_studies_archive(
                 # Распаковываем только нужные файлы
                 with zipfile.ZipFile(archive_bytes, 'r') as zip_ref:
                     for file_info in files_info:
+                        
                         file_name = file_info["file_name"]
+                        logger.info(f"Unpack {file_name}")
 
                         # Проверяем, существует ли файл в архиве
                         if file_name not in zip_ref.namelist():
@@ -135,6 +141,7 @@ async def download_studies_archive(
             with zipfile.ZipFile(output_archive_buffer, mode='w', compression=zipfile.ZIP_DEFLATED) as output_zip:
                 for root, _, files in os.walk(temp_dir):
                     for file in files:
+                        logger.info(f"Repack {file}")
                         file_path = os.path.join(root, file)
                         output_zip.write(file_path, arcname=file)
 
@@ -149,10 +156,12 @@ async def download_studies_archive(
                         status_code=500,
                         detail=f"Failed to remove temp directory: {str(e)}"
                     )
+                
+            logger.info("Return")
 
             # Возвращаем архив пользователю
-            return StreamingResponse(
-                output_archive_buffer,
+            return Response(
+                content=output_archive_buffer.read(),
                 media_type="application/zip",
                 headers={"Content-Disposition": "attachment; filename=studies_archive.zip"}
             )
