@@ -19,12 +19,15 @@ import {
   AccordionItem,
   AccordionTrigger
 } from "../ui/accordion";
+import useApiCall from "@/lib/hooks/useApiCall";
+import api from "@/lib/api";
 
 export const Download = () => {
   const [totalQuantity, setTotalQuantity] = useState(0);
 
   const store = useCartSelector((store) => store.cart.items);
 
+  const postData = useApiCall<Blob>(api.post);
   useEffect(() => {
     setTotalQuantity(store.reduce((acc, value) => value.data.length, 0));
   }, [store]);
@@ -78,11 +81,34 @@ export const Download = () => {
           </div>
         )}
         <SheetFooter>
-          <SheetClose asChild>
-            <Button type="submit" disabled={store.length == 0} className="mt-4">
-              Выгрузить
-            </Button>
-          </SheetClose>
+          <Button
+            onClick={() => {
+              postData(
+                "/download/",
+                {
+                  series_uids: store
+                    .map((item) => item.data.map((data) => data.uid))
+                    .flat()
+                },
+                { responseType: "blob" }
+              ).then((response) => {
+                const href = URL.createObjectURL(response.data);
+
+                const link = document.createElement("a");
+                link.href = href;
+                link.setAttribute("download", "archive.zip");
+                document.body.appendChild(link);
+                link.click();
+
+                document.body.removeChild(link);
+                URL.revokeObjectURL(href);
+              });
+            }}
+            disabled={store.length == 0}
+            className="mt-4"
+          >
+            Выгрузить
+          </Button>
         </SheetFooter>
       </SheetContent>
     </Sheet>
