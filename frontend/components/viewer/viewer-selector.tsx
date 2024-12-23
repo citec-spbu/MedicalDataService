@@ -9,7 +9,7 @@ import Image from "next/image";
 import api from "@/lib/api";
 import useApiCall from "@/lib/hooks/useApiCall";
 
-const API = process.env.API;
+const API = 'http://app:8000';
 interface SelectorProps {
   activeSeries: activeSeriesProps | null;
   setActiveSeries: (series: activeSeriesProps) => void;

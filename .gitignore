@@ -1,13 +1,12 @@
 Diagrams/.*
-.env
-alembic.ini
 **/__pycache__
 
 # App folder
-app/migration
 frontend/package-lock.json
 .vscode
 .idea
 test.json
-migrations/
+pgdata
+rabbitmqdata
+miniodata
 certs/*

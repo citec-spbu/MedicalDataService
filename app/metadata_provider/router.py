@@ -5,7 +5,7 @@ from app.series.dao import SeriesDAO
 from app.instances.dao import InstanceDAO
 from urllib3.filepost import encode_multipart_formdata, choose_boundary
 from urllib3.fields import RequestField
-from app.config import get_minio_client
+from app.config import get_minio_client, minio_settings
 from PIL import Image
 from typing import Optional
 import io
@@ -18,6 +18,8 @@ from app.users.schemas import SUserWithRole
 router = APIRouter(prefix="/dicomweb", tags=["Access for dicom images and metadata"])
 
 minio_client = get_minio_client()
+
+PIXEL_DATA_BUCKET =  minio_settings.MINIO_BUCKET
 
 
 def anonymize_patient_data(patient_json: dict, show_personal_data: bool = False) -> dict:
@@ -171,7 +173,7 @@ async def get_instance_pixeldata(
 
     try:
         data = minio_client.get_object(
-            "pixel-data",
+            PIXEL_DATA_BUCKET,
             instance.pixel_data_path
         ).read()
     except Exception as e:
@@ -246,7 +248,7 @@ async def get_instance_preview(study_uid: str, series_uid: str, instance_uid: st
 
     try:
         pixel_data = minio_client.get_object(
-            "pixel-data",
+            PIXEL_DATA_BUCKET,
             instance.pixel_data_path
         ).read()
 
@@ -272,7 +274,7 @@ async def get_series_preview(study_uid: str, series_uid: str):
 
         instance = instances[0]
         pixel_data = minio_client.get_object(
-            "pixel-data",
+            PIXEL_DATA_BUCKET,
             instance.pixel_data_path
         ).read()
 

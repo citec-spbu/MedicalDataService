@@ -13,6 +13,8 @@ type FormState = {
   fields?: Record<string, string>;
 };
 
+const API = "http://app:8000"
+
 export const register = async (
   prevState: FormState,
   data: FormData
@@ -21,7 +23,7 @@ export const register = async (
   const parsed = RegisterSchema.safeParse(formData);
 
   try {
-    await axios.postForm("http://localhost:8000/user/register/", {
+    await axios.postForm(`${API}/user/register/`, {
       nickname: formData.login,
       password: formData.password
     });

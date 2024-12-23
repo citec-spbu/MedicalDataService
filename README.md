@@ -1,13 +1,25 @@
 # MedicalDataService
+
 System for storing, indexing and visualizing medical data in DICOM format
 
 ## Diagrams
+
 1. [Use case diagram](https://app.diagrams.net/#Hcitec-spbu%2FMedicalDataService%2Fmain%2FDiagrams%2FUseCaseDiagram.drawio#%7B%22pageId%22%3A%22K9DpIMCQUKm6tweqTpe7%22%7D)
 2. [Activity diagram](https://app.diagrams.net/#Hcitec-spbu%2FMedicalDataService%2Fmain%2FDiagrams%2FActivityDiagram.drawio#%7B%22pageId%22%3A%22d6oIZNa-YsMYUfMxQyWx%22%7D)
 3. [ER diagram](https://app.diagrams.net/#Hcitec-spbu%2FMedicalDataService%2Fmain%2FDiagrams%2FERDiagram.drawio#%7B%22pageId%22%3A%22ZZTZYGC4paBtnbswUOO2%22%7D)
 4. [Sequence diagram](https://app.diagrams.net/#Hcitec-spbu%2FMedicalDataService%2Fmain%2FDiagrams%2FSequenceDiagram.drawio#%7B%22pageId%22%3A%22-7-vLeRaQvUi-DyRjATi%22%7D)
 
-## Backend setup
+## Setup via Docker (Recomended)
+
+1. `docker-compose --build`
+2. `docker-compose up`
+
+#### To stop containers
+
+`docker-compose down`
+
+## Backend setup (May not work)
+
 1. Install python3.12 interpreter.
 2. Install dependencies with `pip install -r requirements.txt`.
 3. Create `certs` directory and go it.
@@ -28,6 +40,7 @@ System for storing, indexing and visualizing medical data in DICOM format
 18. For upgrade alternatively you can run `alembic upgrade VERSION_ID`, where VERSION_ID is id from generated file from folder app/migration/versions which contains a line like `Revision ID: VERSION_ID`.
 
 ## Usage
+
 Run `fastapi dev app/main.py` from root folder of project
 
 To check tokens on the backend, log in with the appropriate token. Tokens can be obtained using the `/user/login/` endpoint

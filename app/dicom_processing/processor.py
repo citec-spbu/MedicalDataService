@@ -32,7 +32,7 @@ from app.broker import IndexQuery
 router = RabbitRouter(rabbitmq_settings.url)
 
 minio_client = get_minio_client()
-PIXEL_DATA_BUCKET = "pixel-data"
+PIXEL_DATA_BUCKET =  minio_settings.MINIO_BUCKET
 
 
 class DicomProcessor:

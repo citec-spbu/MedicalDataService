@@ -52,7 +52,7 @@ async def download_studies_archive(
         )
 
     # Проверка доступа
-    if user_data.role == UserRole.TECHNICAL:
+    if user_data.role == UserRole.UPLOADER:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Insufficient access rights"
