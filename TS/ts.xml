@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE TS SYSTEM "ts.dtd">
+<TS>
+    <ProjectDescription>
+        Система хранения, индексирования и визуализации медицинских данных в формате DICOM.
+        Проект направлен на проектирование и разработку системы хранения в виде web-сервиса и API,
+        индексирования и визуализации медицинских данных в формате DICOM.
+    </ProjectDescription>
+    <Data>
+        <Image alt="ER diagram">er.png</Image>
+    </Data>
+    <UserRoles>
+        <Image alt="Roles">roles.png</Image>
+        <Role>
+            <Name>Загрузчик</Name>
+            <RoleDescription>загрузка архивов</RoleDescription>
+        </Role>
+        <Role>
+            <Name>Технический аккаунт</Name>
+            <RoleDescription>просмотр загруженных данных и их скачивание</RoleDescription>
+        </Role>
+        <Role>
+            <Name>Модератор</Name>
+            <RoleDescription>всё вышеперечисленное</RoleDescription>
+        </Role>
+        <Role>
+            <Name>Администратор</Name>
+            <RoleDescription>всё вышеперечисленное + изменение данных</RoleDescription>
+        </Role>
+    </UserRoles>
+    <UI_API>
+        Пользовательский интерфейс в браузере с различным отображением для разных ролей.
+        Наличие браузера загруженных архивов. Визуализация DICOM.
+    </UI_API>
+    <Technologies>
+        <Frontend>
+            <Technology>React</Technology>
+            <Technology>NextJS</Technology>
+            <Technology>CornerstoneJS (визуализатор)</Technology>
+        </Frontend>
+        <Backend>
+            <Framework>FastAPI</Framework>
+            <Database>PostgreSQL</Database>
+            <ObjectStorage>MinIO</ObjectStorage>
+            <MessageBroker>RabbitMQ</MessageBroker>
+        </Backend>
+    </Technologies>
+    <Testing>
+        Тестирование на предоставленном заказчиком архиве с более чем 3 тысячами снимков.
+    </Testing>
+</TS>

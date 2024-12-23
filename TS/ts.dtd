@@ -1,0 +1,19 @@
+<!ELEMENT TS (ProjectDescription, Data, UserRoles, UI_API, Technologies, Testing)>
+        <!ELEMENT ProjectDescription (#PCDATA)>
+        <!ELEMENT Data (Image)>
+        <!ELEMENT Image (#PCDATA)>
+        <!ATTLIST Image alt CDATA #REQUIRED>
+        <!ELEMENT UserRoles (Image, Role+)>
+        <!ELEMENT Role (Name, RoleDescription)>
+        <!ELEMENT Name (#PCDATA)>
+        <!ELEMENT RoleDescription (#PCDATA)>
+        <!ELEMENT UI_API (#PCDATA)>
+        <!ELEMENT Technologies (Frontend, Backend)>
+        <!ELEMENT Frontend (Technology+)>
+        <!ELEMENT Backend (Framework, Database, ObjectStorage, MessageBroker)>
+        <!ELEMENT Technology (#PCDATA)>
+        <!ELEMENT Framework (#PCDATA)>
+        <!ELEMENT Database (#PCDATA)>
+        <!ELEMENT ObjectStorage (#PCDATA)>
+        <!ELEMENT MessageBroker (#PCDATA)>
+        <!ELEMENT Testing (#PCDATA)>
