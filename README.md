@@ -11,12 +11,12 @@ System for storing, indexing and visualizing medical data in DICOM format
 
 ## Setup via Docker (Recomended)
 
-1. `docker-compose --build`
+1. `docker-compose build`
 2. `docker-compose up`
 
 #### To stop containers
 
-`docker-compose down`
+1. `docker-compose down`
 
 ## Backend setup (May not work)
 
